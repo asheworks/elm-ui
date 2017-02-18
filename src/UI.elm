@@ -2,30 +2,81 @@ module UI exposing
   ( ThemeCssClasses(..)
   , Theme
   , theme
+  , styles
+
+  , errorLabel
+  , hiddenStyle
+  , h1Label
+  , h2Label
+  , h3Label
+  , icon
+  
+
+  , FormModel
+  , formTitle
+  , formError
+  , formControl
+
+  , CheckboxModel
+  , checkboxEntry
+  , checkboxControl
+
   , InputTypes(..)
   , InputModel
-  , LabelModel
-  , styles
-  , flexColumn
-  , flexRow
-  , errorLabel
+  , inputType
   , inputField
+
+  , TextAreaModel
+  , textAreaField
+
+  , LabelModel
   , labelField
+  
+  , SubmitButtonModel
+  , submitButton
   )
 
 {-| This library contains common UI control definitions
 
 ## Style Definitions
 @docs theme, ThemeCssClasses, Theme
+@docs styles
 
 ## Form Element Types
-@docs InputModel, InputTypes, LabelModel
 
-@docs styles, flexColumn, flexRow
+## General
 
-@docs inputField, labelField, errorLabel
+@docs hiddenStyle, icon, titleLabel, errorLabel
+
+## Form
+
+@docs FormModel, formTitle, formError, formControl
+
+## Checkbox
+
+@docs CheckboxModel, checkboxEntry, checkboxControl
+
+## Inputs
+
+@docs InputTypes, InputModel, inputField
+
+## TextArea
+
+@docs TextAreaModel, textAreaField
+
+## Labels
+
+@docs LabelModel, labelField
+
+## Submit
+
+@docs SubmitButtonModel, submitButton
+
+
 
 -}
+
+
 
 --
 -- Semantic Forms:
@@ -33,11 +84,13 @@ module UI exposing
 --
 
 import Html exposing (..)
-import Html.Attributes exposing (defaultValue, for, id, placeholder, required, style, type_, value)
+-- import Html.Attributes exposing (alt, defaultValue, for, id, placeholder, required, src, style, type_, value)
+import Html.Attributes as Attr
 import Html.CssHelpers exposing (Namespace, withNamespace)
 import Html.Events exposing (onInput, onClick)
 import Css exposing (..)
 
+import Array exposing (..)
 --
 
 {-| namespace
@@ -47,25 +100,286 @@ Isolates theme related styles from other css definitions
 -}
 theme : Namespace String a b c
 theme =
-    withNamespace "AshwWorks--Elm-UI--Theme--"
+    withNamespace "AsheWorks--Elm-UI--Theme--"
 
 {-| ThemeCssClasses
 -}
 type ThemeCssClasses
-    = Theme_InputField
+    = Theme_FormWrapper
+    | Theme_FormHeader
+    | Theme_FormSection
+    | Theme_FormAside
+    | Theme_FormFooter
+
+    | Theme_FormTitle
+    | Theme_FormError
+
+    | Theme_Section_Wrapper
+    | Theme_Section_Header
+
+    | Theme_FieldSet_Wrapper
+
+    | Theme_CheckboxField_Wrapper
+    | Theme_CheckboxField_UnorderedList
+    | Theme_CheckboxField_ListItem
+    | Theme_CheckboxField
+    | Theme_CheckboxField_Label
+    | Theme_CheckboxField_Input
+    | Theme_CheckboxField_Input_Error
+    | Theme_CheckboxField_Error
+
+    | Theme_InputField_Wrapper
+    | Theme_InputField
     | Theme_InputField_Label
     | Theme_InputField_Input
-    | Theme_InputField_InputError
+    | Theme_InputField_Input_Error
     | Theme_InputField_Error
+
+    | Theme_TextAreaField_Wrapper
+    | Theme_TextAreaField
+    | Theme_TextAreaField_Label
+    | Theme_TextAreaField_Input
+    | Theme_TextAreaField_Input_Error
+    | Theme_TextAreaField_Error
+
+    | Theme_LabelField_Wrapper
     | Theme_LabelField
     | Theme_LabelField_Label
     | Theme_LabelField_Value
-    | Theme_FormError
+
+    | Theme_SubmitButton_Wrapper
+    | Theme_SubmitButton
+    | Theme_SubmitButton_Label
 
 {-| Theme
 
 -}
 type alias Theme b command = Namespace String ThemeCssClasses b command
+
+{-|
+-}
+styles : List Mixin -> Html.Attribute msg
+styles =
+    asPairs >> Attr.style
+
+{-|
+-}
+hiddenStyle : List Mixin
+hiddenStyle =
+    [ property "visibility" "hidden"
+    , property "user-select" "none"
+    ]
+
+{-|
+-}
+icon : ThemeCssClasses -> Html command
+icon cssClass =
+    Html.img
+        [ theme.class
+            [ cssClass
+            ]
+        , Attr.src "url"
+        , Attr.alt "alt text"
+        ]
+        [
+        ]
+
+{-|
+-}
+h1Label : ThemeCssClasses -> String -> Html command
+h1Label cssClass value =
+    Html.h1
+        [ theme.class
+            [ cssClass
+            ]
+        ]
+        [ Html.text value
+        ]
+
+{-|
+-}
+h2Label : ThemeCssClasses -> String -> Html command
+h2Label cssClass value =
+    Html.h2
+        [ theme.class
+            [ cssClass
+            ]
+        ]
+        [ Html.text value
+        ]
+
+{-|
+-}
+h3Label : ThemeCssClasses -> String -> Html command
+h3Label cssClass value =
+    Html.h3
+        [ theme.class
+            [ cssClass
+            ]
+        ]
+        [ Html.text value
+        ]
+
+{-|
+-}
+errorLabel : ThemeCssClasses -> Maybe String -> Html command
+errorLabel cssClass value =
+    case value of
+        Nothing ->
+            span
+                [ styles hiddenStyle
+                ]
+                [ Html.text ""
+                ]
+        Just error ->
+            span
+                [ theme.class
+                    [ cssClass
+                    ]
+                ]
+                [ Html.text error
+                ]
+
+{-| FormModel
+-}
+type alias FormModel command =
+    { id : String
+    , header : Maybe (List (Html command))
+    , section : Maybe (List (Html command))
+    , aside : Maybe (List (Html command))
+    , footer : Maybe (List (Html command))
+    }
+
+{-|
+-}
+formTitle : String -> Html command
+formTitle value =
+    h1Label Theme_FormTitle value
+
+{-|
+-}
+formError : Maybe String -> Html command
+formError value =
+    errorLabel Theme_FormError value
+
+{-| formControl
+-}
+formControl : FormModel command -> Html command
+formControl model =
+    form
+        [ theme.class
+            [ Theme_FormWrapper
+            ]
+        , Attr.id model.id
+        ]
+        [ header
+            [ theme.class
+                [ Theme_FormHeader
+                ]
+            ]
+            <| Maybe.withDefault [] model.header
+        , section
+            [ theme.class
+                [ Theme_FormSection
+                ]
+            ]
+            <| Maybe.withDefault [] model.section
+        , aside
+            [ theme.class
+                [ Theme_FormAside
+                ]
+            ]
+            <| Maybe.withDefault [] model.aside
+        , footer
+            [ theme.class
+                [ Theme_FormFooter
+                ]
+            ]
+            <| Maybe.withDefault [] model.footer
+        ]
+
+{-| KeyValue
+-}
+type alias KeyValueError =
+    { key : String
+    , value : String
+    , error : Maybe String
+    }
+
+{-| CheckboxModel
+-}
+type alias CheckboxModel command =
+    { id : String
+    , values : List KeyValueError
+    , error : Maybe String
+    , onSelect : String -> command
+    }
+
+checkboxEntry : CheckboxModel command -> Int -> KeyValueError -> Html command
+checkboxEntry parentModel index model =
+    label
+        [ theme.class
+            [ Theme_CheckboxField
+            ]
+        ]
+        [ span
+            [ theme.class
+                [ Theme_CheckboxField_Label
+                ]
+            ]
+            [ Html.text model.value
+            ]
+        , input
+            [ Attr.id <| parentModel.id ++ toString index ++ "-checkboxField"
+            , theme.class <|
+                case model.error of
+                    Nothing ->
+                        [ Theme_CheckboxField_Input
+                        ]
+                    Just _ ->
+                        [ Theme_CheckboxField_Input
+                        , Theme_CheckboxField_Input_Error
+                        ]
+            , Attr.value model.key
+            , Attr.type_ "checkbox"
+            , onClick (parentModel.onSelect model.key)
+            ]
+            [
+            ]
+        ]
+
+checkboxListItem : Html command -> Html command
+checkboxListItem child =
+    li
+        [ theme.class
+            [ Theme_CheckboxField_ListItem
+            ]
+        ]
+        [ child
+        ]
+
+checkboxControl : CheckboxModel command -> Html command
+checkboxControl model =
+    let
+        entries =
+            List.indexedMap (checkboxEntry model) model.values
+
+        wrappedEntries =
+            List.map checkboxListItem entries
+    in
+    div
+        [ theme.class
+            [ Theme_CheckboxField_Wrapper
+            ]
+        , Attr.id model.id
+        ]
+        [ ul
+            [ theme.class
+                [ Theme_CheckboxField_UnorderedList
+                ]
+            ]
+            wrappedEntries
+        ]
 
 {-| InputTypes
 -}
@@ -79,7 +393,7 @@ State for an input text box with placeholder and validation labels
 
 -}
 type alias InputModel command =
-    { key : String
+    { id : String
     , label : String
     , placeholder : String
     , inputType : InputTypes
@@ -88,153 +402,204 @@ type alias InputModel command =
     , onInput : String -> command
     }
 
+{-| inputType
+-}
+inputType : InputTypes -> Attribute msg
+inputType value =
+    case value of
+
+        TextField -> Attr.type_ "text"
+
+        PasswordField -> Attr.type_ "password"
+
+{-| inputField
+-}
+inputField : InputModel command -> Html command
+inputField model =
+    div
+        [ theme.class
+            [ Theme_InputField_Wrapper
+            ]
+        , Attr.id model.id
+        ]
+        [ label
+            [ theme.class
+                [ Theme_InputField
+                ]
+            , Attr.for <| model.id ++ "-inputField"
+            ]
+            [ span
+                [ theme.class
+                    [ Theme_InputField_Label
+                    ]
+                ]
+                [ Html.text model.label
+                ]
+            , input
+                [ Attr.id <| model.id ++ "-inputField"
+                , theme.class <|
+                    case model.error of
+                        Nothing ->
+                            [ Theme_InputField_Input
+                            ]
+                        Just _ ->
+                            [ Theme_InputField_Input
+                            , Theme_InputField_Input_Error
+                            ]
+                , Attr.placeholder model.placeholder
+                , inputType model.inputType
+                , Attr.defaultValue model.value
+                , Attr.value model.value
+                , onInput model.onInput
+                ]
+                [
+                ]
+            , errorLabel Theme_InputField_Error model.error
+            ]
+        ]
+
+{-| TextAreaModel
+
+State for an input text area box with placeholder and validation labels
+
+-}
+type alias TextAreaModel command =
+    { id : String
+    , label : String
+    , placeholder : String
+    , rows : Int
+    , cols : Int
+    , value : String
+    , error : Maybe String
+    , onInput : String -> command
+    }
+
+{-| textAreaField
+-}
+textAreaField : TextAreaModel command -> Html command
+textAreaField model =
+    div
+        [ theme.class
+            [ Theme_TextAreaField_Wrapper
+            ]
+        , Attr.id model.id
+        ]
+        [ label
+            [ theme.class
+                [ Theme_TextAreaField
+                ]
+            , Attr.for <| model.id ++ "-textAreaField"
+            ]
+            [ span
+                [ theme.class
+                    [ Theme_TextAreaField_Label
+                    ]
+                ]
+                [ Html.text model.label
+                ]
+            , textarea
+                [ Attr.id <| model.id ++ "-textAreaField"
+                , theme.class <|
+                    case model.error of
+                        Nothing ->
+                            [ Theme_TextAreaField_Input
+                            ]
+                        Just _ ->
+                            [ Theme_TextAreaField_Input
+                            , Theme_TextAreaField_Input_Error
+                            ]
+                , Attr.placeholder model.placeholder
+                , Attr.rows model.rows
+                , Attr.cols model.cols
+                , Attr.defaultValue model.value
+                , Attr.value model.value
+                , onInput model.onInput
+                ]
+                [
+                ]
+            , errorLabel Theme_TextAreaField_Error model.error
+            ]
+        ]
+
 {-| LabelModel
 
 State for a labeled value
 
 -}
 type alias LabelModel =
-    { key : String
+    { id : String
     , label : String
     , value : String
     }
 
 {-|
 -}
-styles : List Mixin -> Html.Attribute msg
-styles =
-    asPairs >> style
-    
-{-| flexColumn
-
-Renders a div with flexbox enabled in column direction
-
--}
-flexColumn : Int -> Html command -> Html command
-flexColumn flexSize children =
-    div
-        [ styles
-            [ flex (int flexSize)
-            , displayFlex
-            , flexDirection column
-            ]
-        ]
-        [ children
-        ]
-
-{-|
--}
-flexRow : Int -> Html command -> Html command
-flexRow flexSize children =
-    div
-        [ styles
-            [ flex (int flexSize)
-            , displayFlex
-            , flexDirection row
-            ]
-        ]
-        [ children
-        ]
-
-{-|
--}
-hiddenStyle : List Mixin
-hiddenStyle =
-    [ property "visibility" "hidden"
-    , property "user-select" "none"
-    ]
-
-{-|
--}
-errorLabel : ThemeCssClasses -> Maybe String -> Html command
-errorLabel cssClass value =
-    case value of
-        Nothing ->
-            div
-                [ styles hiddenStyle
-                ]
-                [ Html.text ""
-                ]
-        Just error ->
-            div
-                [ theme.class
-                    [ cssClass
-                    ]
-                ]
-                [ Html.text error
-                ]
-
-inputType : InputTypes -> Attribute msg
-inputType value =
-    case value of
-
-        TextField -> type_ "text"
-
-        PasswordField -> type_ "password"
-
-{-|
--}
-inputField : InputModel command -> Html command
-inputField model =
-    label
-        [ theme.class
-            [ Theme_InputField
-            ]
-        , for <| model.key ++ "-field"
-        ]
-        [ span
-            [ theme.class
-                [ Theme_InputField_Label
-                ]
-            ]
-            [ Html.text model.label
-            ]
-        , input
-            [ id <| model.key ++ "-field"
-            , theme.class <|
-                case model.error of
-                    Nothing ->
-                        [ Theme_InputField_Input
-                        ]
-                    Just _ ->
-                        [ Theme_InputField_Input
-                        , Theme_InputField_InputError
-                        ]
-            , placeholder model.placeholder
-            , inputType model.inputType
-            , defaultValue model.value
-            , value model.value
-            , onInput model.onInput
-            ]
-            [
-            ]
-        , errorLabel Theme_InputField_Error model.error
-        ]
-
-{-|
--}
 labelField : LabelModel -> Html command
 labelField model =
-    label
+    div
         [ theme.class
-            [ Theme_LabelField
+            [ Theme_LabelField_Wrapper
             ]
-        , for <| model.key ++ "-field"
+        , Attr.id model.id
         ]
-        [ span
+        [ label
             [ theme.class
-                [ Theme_LabelField_Label
+                [ Theme_LabelField
+                ]
+            , Attr.for <| model.id ++ "-field"
+            ]
+            [ Html.section
+                [ theme.class
+                    [ Theme_LabelField_Label
+                    ]
+                ]
+                [ Html.text model.label
+                ]
+            , Html.aside
+                [ Attr.id <| model.id ++ "-field"
+                , theme.class
+                    [ Theme_LabelField_Value
+                    ]
+                , Attr.value model.value
+                ]
+                [ Html.text model.value
                 ]
             ]
-            [ Html.text model.label
+        ]
+
+{-| SubmitButtonModel
+
+State for a submit button control
+
+-}
+type alias SubmitButtonModel command =
+    { id : String
+    , label : String
+    , onClick : command
+    }
+
+{-| submitButton
+-}
+submitButton : SubmitButtonModel command -> Html command
+submitButton model =
+    div
+        [ theme.class
+            [ Theme_SubmitButton_Wrapper
             ]
-        , span
-            [ id <| model.key ++ "-field"
-            , theme.class
-                [ Theme_LabelField_Value
+        , Attr.id model.id
+        ]
+        [ div
+            [ theme.class
+                [ Theme_SubmitButton
                 ]
-            , value model.value
+            , onClick model.onClick
             ]
-            [ Html.text model.value
+            [ span
+                [ theme.class
+                    [ Theme_SubmitButton_Label
+                    ]
+                ]
+                [ Html.text model.label
+                ]
             ]
         ]
