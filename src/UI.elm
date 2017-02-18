@@ -303,6 +303,7 @@ formControl model =
 type alias KeyValueError =
     { key : String
     , value : String
+    , checked : Bool
     , error : Maybe String
     }
 
@@ -342,6 +343,7 @@ checkboxEntry parentModel index model =
                         ]
             , Attr.value model.key
             , Attr.type_ "checkbox"
+            , Attr.checked model.checked
             , onClick (parentModel.onSelect model.key)
             ]
             [

@@ -138,10 +138,12 @@ simpleCheckboxForm =
         , values =
             [   { key = "one"
                 , value = "1 - One"
+                , checked = False
                 , error = Nothing
                 }
             ,   { key = "two"
                 , value = "2 - Two"
+                , checked = True
                 , error = Nothing
                 }
             ]

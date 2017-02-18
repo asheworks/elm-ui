@@ -4,7 +4,6 @@ module Example.FormBuilder exposing
   , Effect(..)
   , BulletTypes(..)
   , SectionKinds(..)
-  , SectionModel
   , FieldTypes(..)
   , InputFieldModel
   , LabeledTextFieldModel
@@ -18,7 +17,9 @@ module Example.FormBuilder exposing
   , formZipper
   )
 
+import Dict exposing (..)
 import Set exposing (..)
+
 -- import Date exposing (..)
 import Html exposing (..)
 
@@ -35,29 +36,79 @@ import Example.MetaTree exposing (..)
 
 type Command
   = InputField_Update String String
+  | RadioField_Update String String
 
 type Event
   = InputField_Updated String String
+  | RadioField_Updated String String
 
 type Effect
   = None
 
-commandMap : MetaTree (FieldTypes model) SectionModel -> model -> Command -> Event
+commandMap : MetaTree (FieldTypes model) SectionKinds -> model -> Command -> Event
 commandMap tree model command =
   case Debug.log "FormBuilder - CommandMap" command of
     
     InputField_Update id value ->
       InputField_Updated id value
+    
+    RadioField_Update id value ->
+      RadioField_Updated id value
 
-eventMap : MetaTree (FieldTypes model) SectionModel -> model -> Event -> ( model, Maybe Effect )
+updateTreeById : MetaTree (FieldTypes model) SectionKinds -> String -> model -> (FieldTypes model -> model) -> model
+updateTreeById tree id model leafMap =
+  tree
+  |> Example.MetaTree.toList
+  |> List.foldr
+    (\ leaf model ->
+      case leaf of
+        InputField def ->
+          if def.id == id then  
+            leafMap leaf
+          else
+            model
+
+        RadioField def ->
+          if def.id == id then  
+            leafMap leaf
+          else
+            model
+
+        _ ->
+          model
+    )
+    model
+
+eventMap : MetaTree (FieldTypes model) SectionKinds -> model -> Event -> ( model, Maybe Effect )
 eventMap tree model event =
-  case Debug.log "FormBuilder - EventMap" event of
+  let
+    model_ = case Debug.log "FormBuilder - EventMap" event of
 
     InputField_Updated id value ->
-      let
-        t = Debug.log "Updated" model
-      in
-        ( updateTree tree model event, Nothing )
+      updateTreeById tree id model
+        (\ leaf ->
+          case leaf of
+            InputField def -> def.set model value
+            _ -> model
+        )
+
+    RadioField_Updated id value ->
+      updateTreeById tree id model
+        (\ leaf ->
+          case leaf of
+            RadioField def -> --def.set model value
+              if Set.member value (def.get model) then
+                def.set model <| Set.remove value (def.get model)
+              else
+                def.set model <| Set.insert value (def.get model)
+            _ -> model
+        )
+  in
+    ( model_, Nothing )
+      -- let
+      --   t = Debug.log "Updated" model
+      -- in
+      --   ( updateTree tree model event, Nothing )
 
 
 type BulletTypes
@@ -65,16 +116,35 @@ type BulletTypes
   | AlphaBullet
   | NumericBullet
 
-type SectionKinds
-  = Header String String
-  | Grid
-  | List
-  | Bullets BulletTypes
-
-type alias SectionModel =
-  { kind : SectionKinds
-  , label : Maybe String
+type alias HeaderModel =
+  { id : String
+  , imgSrc : String
+  , title : String
   }
+
+type alias GridModel =
+  { title : String
+  }
+
+type alias ListModel =
+  { title : String
+  }
+
+type alias BulletsModel =
+  { title : String
+  , type_ : BulletTypes
+  }
+
+type SectionKinds
+  = Header HeaderModel
+  | Grid GridModel
+  | List ListModel
+  | Bullets BulletsModel
+
+-- type alias SectionModel =
+--   { kind : SectionKinds
+--   -- , label : Maybe String
+--   }
 
 type FieldTypes model
   = InputField (InputFieldModel model)
@@ -96,18 +166,20 @@ type alias LabeledTextFieldModel =
   }
 
 type alias RadioFieldModel model =
-  { options : Set String
+  { id : String
+  , options : Dict String String
   , get : model -> Set String
   , set : model -> Set String -> model
   }
 
 type alias BoolFieldModel model =
-  { get : model -> Bool
+  { id : String
+  , get : model -> Bool
   , set : model -> Bool -> model
   }
 
 
-buildForm : MetaTree (FieldTypes model) SectionModel -> model -> Html Command
+buildForm : MetaTree (FieldTypes model) SectionKinds -> model -> Html Command
 buildForm formDef model =
     formZipper formDef model
 
@@ -138,39 +210,83 @@ leafToForm leaf model =
         ]
 
     RadioField def ->
-      div
-        []
-        [ Html.text <| "Radio Leaf " ++ (toString (List.length (Set.toList def.options))) ++ " [" ++ (toString (Set.toList (def.get model))) ++ "]"
-        ]
+      UI.checkboxControl
+        { id = def.id
+        , values = def.options
+          |> Dict.toList
+          |> List.map
+            (\ (key, value) ->
+                { key = key
+                , value = value
+                , checked = Set.member key (def.get model)
+                , error = Nothing
+                }
+            )
+        , error = Nothing
+        , onSelect = RadioField_Update def.id
+        }
 
-branchToForm : Maybe SectionModel -> model -> List (Html Command) -> Html Command
+      -- UI.checkboxControl
+      --   { id = def.id
+      --   , values = model
+      --     |> def.get
+      --     |> Set.toList
+      --     |> List.map
+      --       (\ item ->
+      --           { key = item
+      --           , value = item
+      --           , error = Nothing
+      --           }
+      --       )
+      --   , error = Nothing
+      --   , onSelect = RadioField_Update def.id
+      --   }
+
+      -- div
+      --   []
+      --   [ Html.text <| "Radio Leaf " ++ (toString (List.length (Set.toList def.options))) ++ " [" ++ (toString (Set.toList (def.get model))) ++ "]"
+      --   ]
+
+branchToForm : Maybe SectionKinds -> model -> List (Html Command) -> Html Command
 branchToForm meta model children =
   case meta of
     Nothing -> div [] children
 
     Just branch ->
-      let
-        content = case branch.kind of
-          Header imgSrc title ->
-            Html.text <| "Header Branch: [" ++ (Maybe.withDefault "" branch.label) ++ "]"
+        case branch of
+          Header def ->
+            UI.formControl
+              { id = def.id
+              , header = Just
+                [ Html.text <| "Header Branch: [" ++ def.title ++ "]"
+                ]
+              , section = Just children
+              , aside = Nothing
+              , footer = Nothing
+              }
 
-          Grid ->
-            Html.text <| "Grid Branch: [" ++ (Maybe.withDefault "" branch.label) ++ "]"
+          Grid def ->
+            div
+              []
+              [ Html.text <| "Grid Branch: [" ++ def.title ++ "]"
+              , div [] children
+              ]
           
-          List ->
-            Html.text <| "List Branch: [" ++ (Maybe.withDefault "" branch.label) ++ "]"
+          List def ->
+            div
+              []
+              [ Html.text <| "List Branch: [" ++ def.title ++ "]"
+              , div [] children
+              ]
 
-          Bullets type_ ->
-            Html.text <| "Bullets Branch: [" ++ (Maybe.withDefault "" branch.label) ++ "]"
+          Bullets def ->
+            div
+              []
+              [ Html.text <| "Bullets Branch: [" ++ def.title ++ "]"
+              , div [] children
+              ]
           
-      in
-        div
-          []
-          [ content
-          , div [] children
-          ]
-
-formZipper : MetaTree (FieldTypes model) SectionModel -> model -> Html Command
+formZipper : MetaTree (FieldTypes model) SectionKinds -> model -> Html Command
 formZipper tree model =
   let
     applyZipper ((subtree, crumbs) as zipper) =
@@ -191,29 +307,29 @@ formZipper tree model =
   in
     applyZipper (fromTree tree)
 
-updateLeaf : FieldTypes model -> model -> Event -> model
-updateLeaf leaf model event =
-  case event of
-    InputField_Updated id data ->
-      case leaf of
-        InputField def ->
-          if def.id == id then
-            def.set model data
-          else
-            model
+-- updateLeaf : FieldTypes model -> model -> Event -> model
+-- updateLeaf leaf model event =
+--   case event of
+--     InputField_Updated id data ->
+--       case leaf of
+--         InputField def ->
+--           if def.id == id then
+--             def.set model data
+--           else
+--             model
 
-        _ ->
-          model
+--         _ ->
+--           model
 
-updateTree : MetaTree (FieldTypes model) SectionModel -> model -> Event -> model
-updateTree tree model event =
-  tree
-  |> Example.MetaTree.toList
-  |> List.foldr
-    (\ leaf model ->
-      updateLeaf leaf model event
-    )
-    model
+-- updateTree : MetaTree (FieldTypes model) SectionKinds -> model -> Event -> model
+-- updateTree tree model event =
+--   tree
+--   |> Example.MetaTree.toList
+--   |> List.foldr
+--     (\ leaf model ->
+--       updateLeaf leaf model event
+--     )
+--     model
 
 -- updateZipper : MetaTree (FieldTypes model) SectionModel -> model -> event -> model
 -- updateZipper tree model event =

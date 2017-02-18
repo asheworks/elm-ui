@@ -40,6 +40,7 @@ commandMap model command =
         FormBuilder_Command command_ ->
             FormBuilder_Event <| FormBuilder.commandMap Questionnaire.questionnaire model.questionnaire.state command_
 
+
 eventMap : Model -> Event -> ( Model, Maybe Effect )
 eventMap model event =
     case Debug.log "Example - EventMap" event of
