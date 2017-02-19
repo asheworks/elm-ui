@@ -21,7 +21,11 @@ import UI exposing (..)
 css : UI.Theme b command -> Stylesheet
 css themeNamespace =
     (stylesheet << namespace themeNamespace.name)
-        [ (.) Theme_FormWrapper
+        [ (.) Theme_Error
+            [
+            ]
+        
+        , (.) Theme_FormWrapper
             [ border3 (px 1) dashed (rgba 255 128 128 0.5)
             , padding (px 15)
             ]
@@ -59,6 +63,12 @@ css themeNamespace =
             ]
 
         , (.) Theme_CheckboxField_Wrapper
+            [
+            ]
+        , (.) Theme_CheckboxField_UnorderedList
+            [
+            ]
+        , (.) Theme_CheckboxField_ListItem
             [
             ]
         , (.) Theme_CheckboxField
@@ -138,6 +148,63 @@ css themeNamespace =
             , textAlign center
             , flex (int 1)
             ]
+
+        , (.) Theme_TextAreaField_Wrapper
+            [
+            ]
+        , (.) Theme_TextAreaField
+            [
+            ]
+        , (.) Theme_TextAreaField_Label
+            [
+            ]
+        , (.) Theme_TextAreaField_Input
+            [
+            ]
+        , (.) Theme_TextAreaField_Input_Error
+            [
+            ]
+        , (.) Theme_TextAreaField_Error
+            [
+            ]
+
+        , (.) Theme_YesNoField_Wrapper
+            [ displayFlex
+            , flexDirection row
+            ]
+        , (.) Theme_YesNoField
+            [ displayFlex
+            , flexDirection row
+            ]
+        , (.) Theme_YesNoField_Button
+            [ width (px 50)
+            , height (px 25)
+            , padding2 (px 5) (px 10)
+            , border3 (px 1) solid (hex "#000")
+            , margin2 (px 5) (px 10)
+            , cursor pointer
+            , alignItems center
+            , textAlign center
+            ]
+        , (.) Theme_YesNoField_Button_Selected
+            [ border3 (px 3) solid (hex "#000")
+            ]
+        , (.) Theme_YesNoField_YesButton
+            [ backgroundColor (hex "#0f0")
+            ]
+        , (.) Theme_YesNoField_YesButton_Selected
+            [
+            ]
+        , (.) Theme_YesNoField_NoButton
+            [ backgroundColor (hex "#f00")
+            ]
+        , (.) Theme_YesNoField_NoButton_Selected
+            [
+            ]
+        , (.) Theme_YesNoField_Error
+            [
+            ]
+
         ]
 
 

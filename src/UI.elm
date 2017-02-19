@@ -26,14 +26,18 @@ module UI exposing
   , inputType
   , inputField
 
-  , TextAreaModel
-  , textAreaField
-
   , LabelModel
   , labelField
   
   , SubmitButtonModel
   , submitButton
+
+  , TextAreaModel
+  , textAreaField
+
+  , YesNoFieldModel
+  , yesNoField
+
   )
 
 {-| This library contains common UI control definitions
@@ -60,10 +64,6 @@ module UI exposing
 
 @docs InputTypes, InputModel, inputField
 
-## TextArea
-
-@docs TextAreaModel, textAreaField
-
 ## Labels
 
 @docs LabelModel, labelField
@@ -72,6 +72,13 @@ module UI exposing
 
 @docs SubmitButtonModel, submitButton
 
+## TextArea
+
+@docs TextAreaModel, textAreaField
+
+## YesNo
+
+@docs YesNoModel, yesNoField
 
 
 -}
@@ -105,7 +112,9 @@ theme =
 {-| ThemeCssClasses
 -}
 type ThemeCssClasses
-    = Theme_FormWrapper
+    = Theme_Error
+
+    | Theme_FormWrapper
     | Theme_FormHeader
     | Theme_FormSection
     | Theme_FormAside
@@ -135,13 +144,6 @@ type ThemeCssClasses
     | Theme_InputField_Input_Error
     | Theme_InputField_Error
 
-    | Theme_TextAreaField_Wrapper
-    | Theme_TextAreaField
-    | Theme_TextAreaField_Label
-    | Theme_TextAreaField_Input
-    | Theme_TextAreaField_Input_Error
-    | Theme_TextAreaField_Error
-
     | Theme_LabelField_Wrapper
     | Theme_LabelField
     | Theme_LabelField_Label
@@ -150,6 +152,24 @@ type ThemeCssClasses
     | Theme_SubmitButton_Wrapper
     | Theme_SubmitButton
     | Theme_SubmitButton_Label
+
+    | Theme_TextAreaField_Wrapper
+    | Theme_TextAreaField
+    | Theme_TextAreaField_Label
+    | Theme_TextAreaField_Input
+    | Theme_TextAreaField_Input_Error
+    | Theme_TextAreaField_Error
+
+    | Theme_YesNoField_Wrapper
+    | Theme_YesNoField
+    | Theme_YesNoField_Button
+    | Theme_YesNoField_Button_Selected
+    | Theme_YesNoField_YesButton
+    | Theme_YesNoField_YesButton_Selected
+    | Theme_YesNoField_NoButton
+    | Theme_YesNoField_NoButton_Selected
+    | Theme_YesNoField_Error
+
 
 {-| Theme
 
@@ -234,7 +254,8 @@ errorLabel cssClass value =
         Just error ->
             span
                 [ theme.class
-                    [ cssClass
+                    [ Theme_Error
+                    , cssClass
                     ]
                 ]
                 [ Html.text error
@@ -298,6 +319,7 @@ formControl model =
             <| Maybe.withDefault [] model.footer
         ]
 
+
 {-| KeyValue
 -}
 type alias KeyValueError =
@@ -313,7 +335,7 @@ type alias CheckboxModel command =
     { id : String
     , values : List KeyValueError
     , error : Maybe String
-    , onSelect : String -> command
+    , onSelect : (Int, String) -> command
     }
 
 checkboxEntry : CheckboxModel command -> Int -> KeyValueError -> Html command
@@ -344,7 +366,7 @@ checkboxEntry parentModel index model =
             , Attr.value model.key
             , Attr.type_ "checkbox"
             , Attr.checked model.checked
-            , onClick (parentModel.onSelect model.key)
+            , onClick (parentModel.onSelect (index, model.key))
             ]
             [
             ]
@@ -381,6 +403,7 @@ checkboxControl model =
                 ]
             ]
             wrappedEntries
+        , errorLabel Theme_CheckboxField_Error model.error
         ]
 
 {-| InputTypes
@@ -460,6 +483,90 @@ inputField model =
             ]
         ]
 
+{-| LabelModel
+
+State for a labeled value
+
+-}
+type alias LabelModel =
+    { id : String
+    , label : String
+    , value : String
+    }
+
+{-|
+-}
+labelField : LabelModel -> Html command
+labelField model =
+    div
+        [ theme.class
+            [ Theme_LabelField_Wrapper
+            ]
+        , Attr.id model.id
+        ]
+        [ label
+            [ theme.class
+                [ Theme_LabelField
+                ]
+            , Attr.for <| model.id ++ "-field"
+            ]
+            [ Html.section
+                [ theme.class
+                    [ Theme_LabelField_Label
+                    ]
+                ]
+                [ Html.text model.label
+                ]
+            , Html.aside
+                [ Attr.id <| model.id ++ "-field"
+                , theme.class
+                    [ Theme_LabelField_Value
+                    ]
+                , Attr.value model.value
+                ]
+                [ Html.text model.value
+                ]
+            ]
+        ]
+
+{-| SubmitButtonModel
+
+State for a submit button control
+
+-}
+type alias SubmitButtonModel command =
+    { id : String
+    , label : String
+    -- , error : Maybe String
+    , onClick : command
+    }
+
+{-| submitButton
+-}
+submitButton : SubmitButtonModel command -> Html command
+submitButton model =
+    div
+        [ theme.class
+            [ Theme_SubmitButton_Wrapper
+            ]
+        , Attr.id model.id
+        ]
+        [ div
+            [ theme.class
+                [ Theme_SubmitButton
+                ]
+            , onClick model.onClick
+            ]
+            [ span
+                [ theme.class
+                    [ Theme_SubmitButton_Label
+                    ]
+                ]
+                [ Html.text model.label
+                ]
+            ]
+        ]
+
 {-| TextAreaModel
 
 State for an input text area box with placeholder and validation labels
@@ -523,85 +630,68 @@ textAreaField model =
             ]
         ]
 
-{-| LabelModel
 
-State for a labeled value
+{-| YesNoFieldModel
+
+State for a yes no selection control
 
 -}
-type alias LabelModel =
+type alias YesNoFieldModel command =
     { id : String
-    , label : String
-    , value : String
+    , yesLabel : String
+    , noLabel : String
+    , value : Bool
+    , error : Maybe String
+    , onChange : Bool -> command
     }
 
-{-|
+{-| yesNoField
 -}
-labelField : LabelModel -> Html command
-labelField model =
+yesNoField : YesNoFieldModel command -> Html command
+yesNoField model =
     div
         [ theme.class
-            [ Theme_LabelField_Wrapper
+            [ Theme_YesNoField_Wrapper
             ]
         , Attr.id model.id
         ]
         [ label
             [ theme.class
-                [ Theme_LabelField
+                [ Theme_YesNoField
                 ]
-            , Attr.for <| model.id ++ "-field"
             ]
-            [ Html.section
+            [ div
                 [ theme.class
-                    [ Theme_LabelField_Label
+                  <| List.append
+                    [ Theme_YesNoField_Button
+                    , Theme_YesNoField_YesButton
                     ]
+                    <| if model.value then
+                      [ Theme_YesNoField_Button_Selected
+                      , Theme_YesNoField_YesButton_Selected
+                      ]
+                    else
+                      []
+                , onClick <| model.onChange True
                 ]
-                [ Html.text model.label
+                [ Html.text model.yesLabel
                 ]
-            , Html.aside
-                [ Attr.id <| model.id ++ "-field"
-                , theme.class
-                    [ Theme_LabelField_Value
-                    ]
-                , Attr.value model.value
-                ]
-                [ Html.text model.value
-                ]
-            ]
-        ]
-
-{-| SubmitButtonModel
-
-State for a submit button control
-
--}
-type alias SubmitButtonModel command =
-    { id : String
-    , label : String
-    , onClick : command
-    }
-
-{-| submitButton
--}
-submitButton : SubmitButtonModel command -> Html command
-submitButton model =
-    div
-        [ theme.class
-            [ Theme_SubmitButton_Wrapper
-            ]
-        , Attr.id model.id
-        ]
-        [ div
-            [ theme.class
-                [ Theme_SubmitButton
-                ]
-            , onClick model.onClick
-            ]
-            [ span
+            , div
                 [ theme.class
-                    [ Theme_SubmitButton_Label
+                  <| List.append
+                    [ Theme_YesNoField_Button
+                    , Theme_YesNoField_NoButton
                     ]
+                    <| if not model.value then
+                      [ Theme_YesNoField_Button_Selected
+                      , Theme_YesNoField_NoButton_Selected
+                      ]
+                    else
+                      []
+                , onClick <| model.onChange False
                 ]
-                [ Html.text model.label
+                [ Html.text model.noLabel
                 ]
             ]
+        , errorLabel Theme_YesNoField_Error model.error
         ]

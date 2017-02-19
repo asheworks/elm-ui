@@ -35,12 +35,14 @@ import Example.MetaTree exposing (..)
 --
 
 type Command
-  = InputField_Update String String
-  | RadioField_Update String String
+  = BoolField_Update String Bool
+  | InputField_Update String String
+  | RadioField_Update String (Int, String)
 
 type Event
-  = InputField_Updated String String
-  | RadioField_Updated String String
+  = BoolField_Updated String Bool
+  | InputField_Updated String String
+  | RadioField_Updated String (Int, String)
 
 type Effect
   = None
@@ -49,6 +51,9 @@ commandMap : MetaTree (FieldTypes model) SectionKinds -> model -> Command -> Eve
 commandMap tree model command =
   case Debug.log "FormBuilder - CommandMap" command of
     
+    BoolField_Update id value ->
+      BoolField_Updated id value
+
     InputField_Update id value ->
       InputField_Updated id value
     
@@ -62,6 +67,12 @@ updateTreeById tree id model leafMap =
   |> List.foldr
     (\ leaf model ->
       case leaf of
+        BoolField def ->
+          if def.id == id then
+            leafMap leaf
+          else
+             model
+
         InputField def ->
           if def.id == id then  
             leafMap leaf
@@ -84,6 +95,14 @@ eventMap tree model event =
   let
     model_ = case Debug.log "FormBuilder - EventMap" event of
 
+    BoolField_Updated id value ->
+      updateTreeById tree id model
+        (\ leaf ->
+          case leaf of
+            BoolField def -> def.set model value
+            _ -> model
+        )
+
     InputField_Updated id value ->
       updateTreeById tree id model
         (\ leaf ->
@@ -92,7 +111,7 @@ eventMap tree model event =
             _ -> model
         )
 
-    RadioField_Updated id value ->
+    RadioField_Updated id (index, value) ->
       updateTreeById tree id model
         (\ leaf ->
           case leaf of
@@ -187,10 +206,15 @@ leafToForm : FieldTypes model -> model -> Html Command
 leafToForm leaf model =
   case leaf of
     BoolField def ->
-      div
-        []
-        [ Html.text <| "Bool Leaf " ++ " [" ++ (toString (def.get model)) ++ "]"
-        ]
+      UI.yesNoField
+        { id = def.id
+        , yesLabel = "Yes"
+        , noLabel = "No"
+        , value = (def.get model)
+        , error = Nothing
+        , onChange = BoolField_Update def.id
+        }
+
 
     InputField def ->
       UI.inputField
@@ -203,11 +227,14 @@ leafToForm leaf model =
         , onInput = InputField_Update def.id
         }
 
+
     LabeledTextField def ->
-      div
-        []
-        [ Html.text <| "Labeled Text Leaf " ++ def.label ++ " [" ++ " -- " ++ "]"
-        ]
+      UI.labelField
+        { id = ""
+        , label = def.label
+        , value = def.text
+        }
+
 
     RadioField def ->
       UI.checkboxControl
@@ -225,27 +252,6 @@ leafToForm leaf model =
         , error = Nothing
         , onSelect = RadioField_Update def.id
         }
-
-      -- UI.checkboxControl
-      --   { id = def.id
-      --   , values = model
-      --     |> def.get
-      --     |> Set.toList
-      --     |> List.map
-      --       (\ item ->
-      --           { key = item
-      --           , value = item
-      --           , error = Nothing
-      --           }
-      --       )
-      --   , error = Nothing
-      --   , onSelect = RadioField_Update def.id
-      --   }
-
-      -- div
-      --   []
-      --   [ Html.text <| "Radio Leaf " ++ (toString (List.length (Set.toList def.options))) ++ " [" ++ (toString (Set.toList (def.get model))) ++ "]"
-      --   ]
 
 branchToForm : Maybe SectionKinds -> model -> List (Html Command) -> Html Command
 branchToForm meta model children =
