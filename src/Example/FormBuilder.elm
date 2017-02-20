@@ -26,11 +26,10 @@ import Html exposing (..)
 --
 
 import UI as UI
-import Example.MetaTree exposing (..)
+-- import Example.MetaTree exposing (..)
+import MultiwayTree exposing (..)
+import MultiwayTreeZipper exposing (..)
 
---
-
--- import Example.Model exposing (Command(..), Model)
 
 --
 
@@ -47,6 +46,7 @@ type Event
 type Effect
   = None
 
+
 commandMap : MetaTree (FieldTypes model) SectionKinds -> model -> Command -> Event
 commandMap tree model command =
   case Debug.log "FormBuilder - CommandMap" command of
@@ -59,6 +59,7 @@ commandMap tree model command =
     
     RadioField_Update id value ->
       RadioField_Updated id value
+
 
 updateTreeById : MetaTree (FieldTypes model) SectionKinds -> String -> model -> (FieldTypes model -> model) -> model
 updateTreeById tree id model leafMap =
@@ -89,6 +90,7 @@ updateTreeById tree id model leafMap =
           model
     )
     model
+
 
 eventMap : MetaTree (FieldTypes model) SectionKinds -> model -> Event -> ( model, Maybe Effect )
 eventMap tree model event =
@@ -124,16 +126,12 @@ eventMap tree model event =
         )
   in
     ( model_, Nothing )
-      -- let
-      --   t = Debug.log "Updated" model
-      -- in
-      --   ( updateTree tree model event, Nothing )
 
 
 type BulletTypes
-  = NoBullet
-  | AlphaBullet
+  = AlphaBullet
   | NumericBullet
+
 
 type alias HeaderModel =
   { id : String
@@ -141,18 +139,23 @@ type alias HeaderModel =
   , title : String
   }
 
+
 type alias GridModel =
   { title : String
   }
+
 
 type alias ListModel =
   { title : String
   }
 
+
 type alias BulletsModel =
   { title : String
   , type_ : BulletTypes
+  , show : Bool
   }
+
 
 type SectionKinds
   = Header HeaderModel
@@ -160,16 +163,13 @@ type SectionKinds
   | List ListModel
   | Bullets BulletsModel
 
--- type alias SectionModel =
---   { kind : SectionKinds
---   -- , label : Maybe String
---   }
 
 type FieldTypes model
   = InputField (InputFieldModel model)
   | LabeledTextField (LabeledTextFieldModel)
   | RadioField (RadioFieldModel model)
   | BoolField (BoolFieldModel model)
+
 
 type alias InputFieldModel model =
   { id : String
@@ -179,10 +179,12 @@ type alias InputFieldModel model =
   , set : model -> String -> model
   }
 
+
 type alias LabeledTextFieldModel =
   { label : String
   , text : String
   }
+
 
 type alias RadioFieldModel model =
   { id : String
@@ -190,6 +192,7 @@ type alias RadioFieldModel model =
   , get : model -> Set String
   , set : model -> Set String -> model
   }
+
 
 type alias BoolFieldModel model =
   { id : String
@@ -202,8 +205,9 @@ buildForm : MetaTree (FieldTypes model) SectionKinds -> model -> Html Command
 buildForm formDef model =
     formZipper formDef model
 
-leafToForm : FieldTypes model -> model -> Html Command
-leafToForm leaf model =
+
+leafToForm : Zipper (FieldTypes model) SectionKinds -> FieldTypes model -> model -> Html Command
+leafToForm ctx leaf model =
   case leaf of
     BoolField def ->
       UI.yesNoField
@@ -253,13 +257,156 @@ leafToForm leaf model =
         , onSelect = RadioField_Update def.id
         }
 
-branchToForm : Maybe SectionKinds -> model -> List (Html Command) -> Html Command
-branchToForm meta model children =
+
+bulletString : Zipper (FieldTypes model) SectionKinds -> String
+bulletString ctx =
+  let
+    countPrevZipper count ((subtree, crumbs) as zipper) =
+      case goLeft zipper of
+        Nothing -> count
+        Just prev ->
+          countPrevZipper (count + 1) prev
+
+    bulletStringZipper ((subtree, crumbs) as zipper) =
+      case subtree of
+        Leaf _ -> ""
+        Branch ( meta, subtrees ) ->
+          case meta of
+            Nothing -> ""
+            Just branch ->
+              case branch of
+                Bullets def ->
+                  let
+                    countPrev = countPrevZipper 0 zipper
+                  in
+                    case def.type_ of
+                      AlphaBullet -> "A" ++ (toString countPrev) -- ++ (toString count)
+                      NumericBullet -> "N" ++ (toString countPrev)-- ++ (toString count)
+
+                _ -> ""
+
+    -- countPrev = countPrevZipper 0 ctx
+    bulletString = bulletStringZipper ctx
+
+    t = Debug.log "bulletString" bulletString
+
+    applyZipper depth label ((subtree, crumbs) as zipper) =
+      let
+        -- label_ = ""
+        -- label_ = branchString zipper (label ++ "-" ++ (toString depth))
+        label_ = label ++ " - " ++ (bulletStringZipper zipper)-- (label ++ "-" ++ (toString depth))
+      in
+        --case goUp zipper of
+       case goUp zipper of
+          Nothing -> label
+          Just parent ->
+            -- let
+            --   -- label_ = ""
+            --   -- label_ = branchString zipper (label ++ "-" ++ (toString depth))
+            --   label_ = label ++ " - " ++ (bulletStringZipper parent)-- (label ++ "-" ++ (toString depth))
+            -- in
+              applyZipper (depth + 1) label_ parent
+  in
+    applyZipper 0 "" ctx
+
+
+
+  -- let
+  --   applyZipper depth count ((subtree, crumbs) as zipper) =
+  --     let
+
+  --     in
+
+  -- in
+  --   applyZipper 0 0 ctx
+
+-- bulletString : Zipper (FieldTypes model) SectionKinds -> String
+-- bulletString ctx =
+--   let
+--     branchString ((subtree, crumbs) as zipper) branch label =
+--       case branch of
+--         Bullets def ->
+--           let
+--             count = bulletAlphaCount zipper
+--           in
+--             case def.type_ of
+--               AlphaBullet -> label ++ "A" ++ (toString count)
+--               NumericBullet -> label ++ "1" ++ (toString count)
+
+--         _ -> label
+
+--     applyZipper depth label ((subtree, crumbs) as zipper) =
+--       let
+--         label_ = case subtree of
+--           Leaf _ -> label
+--           Branch ( meta, subtrees ) ->
+--             case meta of
+--               Nothing -> label
+--               Just branch ->
+--                 branchString zipper branch (label ++ "-" ++ (toString depth))
+--       in
+--         --case goUp zipper of
+--         case goLeft zipper of
+--           Nothing -> label
+--           Just parent ->
+--               applyZipper (depth + 1) label_ parent
+--   in
+--     applyZipper 0 ("*" ++ (branchString ctx)) ctx
+
+-- let
+--   t = Debug.log "Parent" parent
+--   -- label_ = case parent of
+--   --   Leaf _ -> label
+--   --   Branch ( meta, subtrees ) ->
+--   --     let
+--   --       t = Debug.log "Parent" meta
+--   --     in
+--   --       toString depth
+
+--   label_ = toString depth
+  
+-- in
+
+-- bulletString : Zipper (FieldTypes model) SectionKinds -> String
+-- bulletString ctx =
+--   let
+--     applyZipper label ((subtree, crumbs) as zipper) =
+--       -- case Debug.log "bulletString SUB" subtree of
+--       case subtree of
+--         Leaf _ -> label
+--         Branch (meta, subtrees) ->
+--           let
+--             label_ =
+--               case meta of
+--                 Nothing -> ""
+--                 Just branch ->
+--                   case branch of
+--                     Bullets def ->
+--                       case Debug.log "bulletString branch" def.type_ of
+--                         AlphaBullet -> "A -"
+--                         NumericBullet -> "1 -"
+--                     _ -> ""
+--           in
+--             case goUp zipper of
+--               Nothing -> label
+--               Just parent ->
+--                 applyZipper (label_ ++ label) parent
+
+--   in
+--     applyZipper "" ctx
+
+branchToForm : Zipper (FieldTypes model) SectionKinds -> Maybe SectionKinds -> model -> List (Html Command) -> Html Command
+branchToForm ctx meta model children =
   case meta of
     Nothing -> div [] children
 
     Just branch ->
+      -- let
+        -- t = Debug.log "Bullets" bullets
+        -- u = Debug.log "state" state
+      -- in
         case branch of
+
           Header def ->
             UI.formControl
               { id = def.id
@@ -288,362 +435,272 @@ branchToForm meta model children =
           Bullets def ->
             div
               []
-              [ Html.text <| "Bullets Branch: [" ++ def.title ++ "]"
-              , div [] children
+              [ span
+                  []
+                  [ Html.text <| (bulletString ctx) ++ "  "
+                  -- [ Html.text <| (bulletString state bullets) ++ "  "
+                  -- [ Html.text "  "
+                  ]
+              , span
+                  []
+                  [ Html.text def.title
+                  ]
+              , div
+                  []
+                  children
               ]
-          
+
 formZipper : MetaTree (FieldTypes model) SectionKinds -> model -> Html Command
 formZipper tree model =
   let
-    applyZipper ((subtree, crumbs) as zipper) =
-      -- case Debug.log "SubTree" subtree of
+    applyZipper depth index ((subtree, crumbs) as zipper) =
       case subtree of
-        Leaf state ->
-          leafToForm state model
+
+        Leaf meta ->
+          leafToForm zipper meta model
 
         Branch (meta, subtrees) ->
-          subtrees
-          |> List.indexedMap
-            (\index _ ->
-              gotoIndex index zipper
-              |> Maybe.map applyZipper
-            )
-          |> keepJusts
-          |> branchToForm meta model
+            subtrees
+            |> List.indexedMap
+              (\index_ _ ->
+                gotoIndex index_ zipper
+                |> Maybe.map (applyZipper (depth + 1) index_)
+              )
+            |> keepJusts
+            |> branchToForm zipper meta model
+
   in
-    applyZipper (fromTree tree)
+    applyZipper 0 0 (fromTree tree)
 
--- updateLeaf : FieldTypes model -> model -> Event -> model
--- updateLeaf leaf model event =
---   case event of
---     InputField_Updated id data ->
---       case leaf of
---         InputField def ->
---           if def.id == id then
---             def.set model data
---           else
---             model
 
---         _ ->
---           model
-
--- updateTree : MetaTree (FieldTypes model) SectionKinds -> model -> Event -> model
--- updateTree tree model event =
---   tree
---   |> Example.MetaTree.toList
---   |> List.foldr
---     (\ leaf model ->
---       updateLeaf leaf model event
---     )
---     model
-
--- updateZipper : MetaTree (FieldTypes model) SectionModel -> model -> event -> model
--- updateZipper tree model event =
---   let
---     applyZipper model_ ((subtree, crumbs) as zipper) =
---       case subtree of
---         Leaf state ->
---           updateLeaf state model_ event
-
---         Branch (meta, subtrees) ->
---           subtrees
---           |> List.indexedMap
---             (\index _ ->
---               gotoIndex index zipper
---               |> Maybe.map (applyZipper model_)
---             )
---           |> keepJusts
---           |> model
---   in
---     applyZipper (fromTree tree)
-
--- buildForm : SampleData -> MetaTree (FieldTypes SampleData) SectionModel -> Html command
--- buildForm model formDef =
---     formZipper model formDef
-
--- leafToForm : SampleData -> FieldTypes SampleData -> Html command
--- leafToForm model leaf =
---   case leaf of
---     BoolField def ->
---       div
---         []
---         [ Html.text <| "Bool Leaf " ++ " [" ++ (toString (def.get model)) ++ "]"
---         ]
-
---     InputField def ->
---       div
---         []
---         [ Html.text <| "Input Leaf " ++ def.label ++ " [" ++ (def.get model) ++ "]"
---         ]
-
---     LabeledTextField def ->
---       div
---         []
---         [ Html.text <| "Labeled Text Leaf " ++ def.label ++ " [" ++ " -- " ++ "]"
---         ]
-
---     RadioField def ->
---       div
---         []
---         [ Html.text <| "Radio Leaf " ++ (toString (List.length (Set.toList def.options))) ++ " [" ++ (toString (Set.toList (def.get model))) ++ "]"
---         ]
-
--- branchToForm : SampleData -> Maybe SectionModel -> List (Html command) -> Html command
--- branchToForm model meta children =
+-- branchToForm : BulletDepthState -> List (Int, Int, BulletTypes) -> Maybe SectionKinds -> model -> List (Html Command) -> Html Command
+-- branchToForm state bullets meta model children =
 --   case meta of
 --     Nothing -> div [] children
 
 --     Just branch ->
 --       let
---         content = case branch.kind of
---           Header imgSrc title ->
---             Html.text <| "Header Branch: [" ++ (Maybe.withDefault "" branch.label) ++ "]"
-
---           Grid ->
---             Html.text <| "Grid Branch: [" ++ (Maybe.withDefault "" branch.label) ++ "]"
-          
---           List ->
---             Html.text <| "List Branch: [" ++ (Maybe.withDefault "" branch.label) ++ "]"
-
---           Bullets type_ ->
---             Html.text <| "Bullets Branch: [" ++ (Maybe.withDefault "" branch.label) ++ "]"
-          
+--         t = Debug.log "Bullets" bullets
+--         -- u = Debug.log "state" state
 --       in
---         div
---           []
---           [ content
---           , div [] children
---           ]
+--         case branch of
 
--- formZipper : SampleData -> MetaTree (FieldTypes SampleData) SectionModel -> Html command
--- formZipper model tree =
---   let
---     applyZipper ((subtree, crumbs) as zipper) =
---       case Debug.log "SubTree" subtree of
---         Leaf state ->
---           leafToForm model state
+--           Header def ->
+--             UI.formControl
+--               { id = def.id
+--               , header = Just
+--                 [ Html.text <| "Header Branch: [" ++ def.title ++ "]"
+--                 ]
+--               , section = Just children
+--               , aside = Nothing
+--               , footer = Nothing
+--               }
 
---         Branch (meta, subtrees) ->
---           subtrees
---           |> List.indexedMap
---             (\index _ ->
---               gotoIndex index zipper
---               |> Maybe.map applyZipper
---             )
---           |> keepJusts
---           |> branchToForm model meta
---   in
---     applyZipper (fromTree tree)
+--           Grid def ->
+--             div
+--               []
+--               [ Html.text <| "Grid Branch: [" ++ def.title ++ "]"
+--               , div [] children
+--               ]
+          
+--           List def ->
+--             div
+--               []
+--               [ Html.text <| "List Branch: [" ++ def.title ++ "]"
+--               , div [] children
+--               ]
 
+--           Bullets def ->
+--             div
+--               []
+--               [ span
+--                   []
+--                   [ Html.text <| (bulletString state bullets) ++ "  "
+--                   ]
+--               , span
+--                   []
+--                   [ Html.text def.title
+--                   ]
+--               , div
+--                   []
+--                   children
+--               ]
 
--- companyNameGetter : SampleDetails -> String
--- companyNameGetter = .companyName
-
--- companyNameSetter : SampleDetails -> String -> SampleDetails
--- companyNameSetter 
-
--- servicesSetter : SampleData -> Set String -> SampleData
--- servicesSetter model data =
---   { model | services = data }
-
-
-
--- type alias SampleData =
---   { details : SampleDetails
---   , serviceDescription : SampleServiceDescription
+-- type alias BulletTypeState =
+--   { numeric : Int
+--   , alpha : Int
 --   }
 
--- type alias SampleDetails =
---   { companyName : String
---   , contactName : String
---   , emailAddress : String
---   -- , date : Date
---   , title : String
---   , telephone : String
+-- type alias BulletTypeContext =
+--   { depth : Int
+--   , index : Int
+--   , type_ : BulletTypes
 --   }
 
--- type alias SampleServiceDescription =
---   { services : Set String
---   , servicesDescription : String
---   -- , dataTypes : Set String
---   -- , compliancePII : Bool
---   -- , compliancePHI : Bool
---   -- , compliancePCI : Bool
---   }
+-- type BulletDepthState = Dict Int BulletTypeState
 
--- type alias Lens parentModel childModel =
---   { get : parentModel -> childModel
---   , set : parentModel -> childModel -> parentModel
---   }
+-- incBulletDepth : Int -> BulletDepthState -> Maybe SectionKinds -> BulletDepthState
+-- incBulletDepth depth state meta =
+--   case meta of
+--     Nothing -> state
+--     Just branch ->
+--       case branch of
+--         Bullets def ->
+--           let
+--             (get, set) = case def.type_ of
+--               NoBullet -> (\_ -> 0) (\ (state_, value) -> state_ )
+--               AlphaBullet -> .alpha (\ (state_, value) -> { state_ | alpha = value + 1 } )
+--               NumericBullet -> .numeric (\ (state_, value) -> { state_ | numeric = value + 1 } )
 
+--             update state = set <| get state
+--           in
+--             state
+--             |> Dict.update depth (Maybe.map update)
 
--- type alias SectionModel parentModel childModel =
---   { label : String
---   , ordering : Maybe String
---   , kind : SectionKinds
---   , data : Lens parentModel childModel
---   -- , children : List subChildModel
---   }
--- type alias SectionModel parentModel childModel subChildModel =
---   { label : String
---   , ordering : Maybe String
---   , kind : SectionKinds
---   , data : Lens parentModel childModel
---   , children : List subChildModel
---   }
+--         _ -> state
 
-
--- , Leaf <| RadioField
---   { label = "Services:"
---   , get = .services
---   , set = servicesSetter
---   }
-
--- formZipper tree =
---   let
---     applyZipper ((subtree, crumbs) as zipper) =
---       case Debug.log "SubTree" subtree of
---         Leaf state ->
---           Leaf state
-
---         Branch (meta, subtrees) ->
---           subtrees
---           |> List.indexedMap
---             (\index _ ->
---               gotoIndex index zipper
---               |> Maybe.map applyZipper
---             )
---           |> keepJusts
---           |> (\st -> ( meta, st ) )
---           |> Branch
---   in
---     applyZipper (fromTree tree)
-
--- detailsGetter : SampleData -> SampleDetails
--- detailsGetter = .details
-
--- detailsSetter : SampleData -> SampleDetails -> SampleData
--- detailsSetter model data =
---   { model | details = data }
+-- appendContext : Int -> Int -> List BulletTypeContext -> Maybe SectionKinds -> List BulletTypeContext
+-- appendContext depth index context meta =
+--   List.append context <|
+--     case meta of
+--       Nothing -> []
+--       Just branch ->
+--           case branch of
+--             Bullets def ->
+--               let
+--                 ctx : BulletTypeContext 
+--                 ctx =
+--                   { depth = depth
+--                   , index = index
+--                   , type_ = def.type_
+--                   }
+--               in
+--                 [ ctx ]
+            
+--             _ -> []
 
 
--- contractorInformation : SampleData -> MetaTree FieldTypes (SectionModel parentModel childModel)
--- contractorInformation model =
---   Branch
---     ( Just
---       { label = "Contractor Information"
---       , ordering = Nothing
---       , kind = GridLayout
---       , data =
---         { get = .details
---         , set = (\ (model, data) -> { model | details = data } )
---         }
---       }
---     , [ Leaf <| InputField
---           { label = "Company Name:"
---           , data =
---             { get = .displayName
---             , set = (\ (model, data) -> { model | displayName = data } )
+-- bulletString : Dict Int BulletTypeState -> List (Int, Int, BulletTypes) -> String
+-- bulletString state bullets =
+--   List.map
+--     (\ (depth, index, bullet) ->
+
+--       let
+--         state_ =
+--           Maybe.withDefault
+--             { alpha = 0
+--             , numeric = 0
 --             }
---           }
---       ]
+--             <| Dict.get depth state
+
+--         t = Debug.log "State" state_
+--       in
+--         case bullet of
+
+--           NoBullet -> ""
+
+--           AlphaBullet ->
+          
+--             "A1 (" ++ (toString state_.alpha) ++ " -- " ++ (toString depth) ++ "-" ++ (toString index) ++ ")"
+
+--           NumericBullet ->
+            
+--             "1 (" ++ (toString state_.numeric) ++ " -- "  ++ (toString depth) ++ "-" ++ (toString index) ++ ")"
+
 --     )
+--     bullets
+--   |> String.concat
 
--- sampleForm model =
---   [ Section
---     { label = "Contractor Information"
---     , ordering = Nothing
---     , kind = GridLayout
---     , data =
---       { get = .details
---       , set = (\ (model, data) -> { model | details = data } )
---       }
---     , children =
---       [ InputField
---         { label = "Company Name:"
---         , data =
---           { get = .displayName
---           , set = (\ (model, data) -> { model | displayName = data } )
---           }
---         }
---       , InputField
---         { label = "Contact Name:"
---         , data =
---           { get = .contactName
---           , set = (\ (model, data) -> { model | contactName = data } )
---           }
---         }
---       , InputField
---         { label = "Email Address:"
---         , data =
---           { get = .emailAddress
---           , set = (\ (model, data) -> { model | emailAddress = data } )
---           }
---         }
---       , InputField
---         { label = "Date:"
---         , data =
---           { get = .date
---           , set = (\ (model, data) -> { model | date = data } )
---           }
---         }
---       , InputField
---         { label = "Title:"
---         , data =
---           { get = .title
---           , set = (\ (model, data) -> { model | title = data } )
---           }
---         }
---       , InputField
---         { label = "Telephone:"
---         , data =
---           { get = .telephone
---           , set = (\ (model, data) -> { model | telephone = data } )
---           }
---         }
---       ]
---     }
---   ]
+-- applyZipper state depth index bullets ((subtree, crumbs) as zipper) =
 
--- InputField
---   { label = "Company Name:"
---   , data =
---     { get = .displayName
---     , set = (\ (model, data) -> { model | displayName = data } )
---     }
+
+-- formMapper : MetaTree (FieldTypes model) SectionKinds -> model -> Html Command
+-- formMapper tree model =
+--   let
+--     applyMap
+
+-- type alias FormZipperState =
+--   { bulletTypeStateByDepth : Dict Int BulletTypeState }
+
+
+
+-- formZipper : MetaTree (FieldTypes model) SectionKinds -> model -> Html Command
+-- formZipper tree model =
+--   let
+--     -- bulletState =
+--     --   { numeric = Dict.empty
+--     --   , alpha = Dict.empty
+--     --   }
+
+--     -- applyZipper
+--     -- applyZipper : 
+--     applyZipper depth index ((subtree, crumbs) as zipper) =
+--       case subtree of
+
+--         Leaf meta ->
+--           leafToForm meta model
+
+--         Branch (meta, subtrees) ->
+--           -- let
+--           --   -- state_ = updateState depth index state meta
+--           --   bullets_ = appendBullet depth index bullets meta
+--           -- in
+--             subtrees
+--             |> List.indexedMap
+--               (\index_ _ ->
+--                 gotoIndex index zipper
+--                 |> Maybe.map (applyZipper (depth + 1) index_)
+--                 -- |> Maybe.map (applyZipper state (depth + 1) index_ bullets_)
+--               )
+--             |> keepJusts
+--             |> branchToForm meta model
+--             -- |> branchToForm state bullets_ meta model
+
+--   in
+--     applyZipper 0 0 (fromTree tree)
+
+
+-- type alias HtmlBulletZipper =
+--   { state : Dict Int BulletState
+--   , html : Html Command
 --   }
--- , InputField
---   { label = "Contact Name:"
---   , data =
---     { get = .contactName
---     , set = (\ (model, data) -> { model | contactName = data } )
---     }
---   }
--- , InputField
---   { label = "Email Address:"
---   , data =
---     { get = .emailAddress
---     , set = (\ (model, data) -> { model | emailAddress = data } )
---     }
---   }
--- , InputField
---   { label = "Date:"
---   , data =
---     { get = .date
---     , set = (\ (model, data) -> { model | date = data } )
---     }
---   }
--- , InputField
---   { label = "Title:"
---   , data =
---     { get = .title
---     , set = (\ (model, data) -> { model | title = data } )
---     }
---   }
--- , InputField
---   { label = "Telephone:"
---   , data =
---     { get = .telephone
---     , set = (\ (model, data) -> { model | telephone = data } )
---     }
---   }
+  
+-- formZipper : MetaTree (FieldTypes model) SectionKinds -> model -> Html Command
+-- formZipper tree model =
+--   let
+
+--     applyZipper state depth index bullets ((subtree, crumbs) as zipper) =
+--       case subtree of
+
+--         Leaf meta ->
+--           let
+--             html_ = leafToForm meta model
+--           in
+--             { state = state
+--             , html = html_
+--             }
+
+--         Branch (meta, subtrees) ->
+--           let
+--             state_ = updateState depth index state meta
+--             bullets_ = appendBullet depth index bullets meta
+--             html_ =
+--               subtrees
+--               |> List.indexedMap
+--                 (\index _ ->
+--                   gotoIndex index zipper
+--                   |> Maybe.map (applyZipper state_ (depth + 1) index bullets_)
+--                 )
+--               |> keepJusts
+--               |> branchToForm state_ bullets_ meta model
+--           in
+--             { state = state_
+--             , html = html_
+--             }
+--             -- ( state_, bullets_, html_ )
+--   in
+--     (applyZipper Dict.empty 0 0 [] (fromTree tree)).html
+
+
+--   -- in
+--   --   applyZipper Dict.empty 0 0 [] (fromTree tree)
