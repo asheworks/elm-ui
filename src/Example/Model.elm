@@ -37,13 +37,13 @@ type alias Model =
 type Command
     = Submit
     | ToggleEntry (Int, String)
-    | UpdateProperty String
+    | InputUpdate String String
     | FormBuilder_Command FormBuilder.Command
 
 type Event
     = Submitted
     | ToggledEntry (Int, String)
-    | UpdatedProperty String
+    | InputUpdated String String
     | FormBuilder_Event FormBuilder.Event
 
 

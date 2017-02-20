@@ -34,8 +34,8 @@ commandMap model command =
         ToggleEntry value ->
             ToggledEntry value
             
-        UpdateProperty value ->
-            UpdatedProperty value
+        InputUpdate id value ->
+            InputUpdated id value
 
         FormBuilder_Command command_ ->
             FormBuilder_Event <| FormBuilder.commandMap Questionnaire.questionnaire model.questionnaire.state command_

@@ -14,6 +14,10 @@ import Example.Questionnaire exposing (..)
 --
 
 import UI as UI
+import UI.Input
+import UI.FieldLabel
+-- import UI.LabeledInput as UI
+
 --
 
 { id, class, classList } =
@@ -46,7 +50,7 @@ view model =
         -- , ( "Simple Input Form with Error", simpleInputFormWithError )
         -- , ( "Simple Text Area Form", simpleTextAreaForm )
         -- , ( "Simple Checkbox Form", simpleCheckboxForm )
-        , ( "Complex Form", complexForm )        
+        -- , ( "Complex Form", complexForm )        
         ]
         |> div [ class [ Component ] ]
 
@@ -56,14 +60,15 @@ simpleInputForm =
         { id = "simple-input-form"
         , header = Nothing
         , section = Just
-            [ UI.inputField
+            -- [ UI.labeledInput
+            [ UI.Input.view
                 { id = "property"
-                , label = "Property: "
+                -- , label = "Property: "
                 , placeholder = "e.g. placeholder"
-                , inputType = UI.TextField
+                , inputType = UI.Input.TextField
                 , value = "Property"
-                , error = Nothing
-                , onInput = UpdateProperty
+                , error = False
+                , onInput = InputUpdate
                 }
             , UI.submitButton
                 { id = "submit"
@@ -84,14 +89,15 @@ simpleInputFormWithError =
             [ UI.formTitle "Simple Input Form With Error"
             ]
         , section = Just
-            [ UI.inputField
+            -- [ UI.labeledInput
+            [ UI.Input.view
                 { id = "property"
-                , label = "Property: "
+                -- , label = "Property: "
                 , placeholder = "e.g. placeholder"
-                , inputType = UI.TextField
+                , inputType = UI.Input.TextField
                 , value = "Property"
-                , error = Nothing
-                , onInput = UpdateProperty
+                , error = False
+                , onInput = InputUpdate
                 }
             , UI.submitButton
                 { id = "submit"
@@ -119,7 +125,7 @@ simpleTextAreaForm =
                 , cols = 40
                 , value = "Property"
                 , error = Nothing
-                , onInput = UpdateProperty
+                , onInput = InputUpdate
                 }
             , UI.submitButton
                 { id = "submit"
@@ -159,24 +165,38 @@ complexForm =
             [ UI.formTitle "Complex Form"
             ]
         , section = Just
-            [ UI.inputField
+            -- [ UI.labeledInput
+            [ UI.FieldLabel.view
                 { id = "property-1"
                 , label = "Property 1: "
-                , placeholder = "e.g. placeholder 1"
-                , inputType = UI.TextField
-                , value = "Property 1"
-                , error = Nothing
-                , onInput = UpdateProperty
+                , error = False
                 }
-            , UI.inputField
+                [ UI.Input.view
+                    { id = "property-1"
+                    -- , label = "Property 1: "
+                    , placeholder = "e.g. placeholder 1"
+                    , inputType = UI.Input.TextField
+                    , value = "Property 1"
+                    , error = False
+                    , onInput = InputUpdate
+                    }
+                ]
+            -- , UI.labeledInput
+            , UI.FieldLabel.view
                 { id = "property-2"
                 , label = "Property 2: "
-                , placeholder = "e.g. placeholder 2"
-                , inputType = UI.TextField
-                , value = "Property 2"
-                , error = Nothing
-                , onInput = UpdateProperty
+                , error = False
                 }
+                [ UI.Input.view
+                    { id = "property-2"
+                    -- , label = "Property 2: "
+                    , placeholder = "e.g. placeholder 2"
+                    , inputType = UI.Input.TextField
+                    , value = "Property 2"
+                    , error = False
+                    , onInput = InputUpdate
+                    }
+                ]
             , UI.submitButton
                 { id = "submit"
                 , label = "SUBMIT"

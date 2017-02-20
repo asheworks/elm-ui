@@ -23,13 +23,27 @@ import Char exposing (..)
 
 -- import Date exposing (..)
 import Html exposing (..)
+import Html.Attributes as Attr
+import Css exposing (..)
 
 --
 
 import UI as UI
+import UI.Input
+import UI.FieldLabel
+-- import UI.LabeledInput as UI
+import UI.YesNo as UI
 import MultiwayTree exposing (..)
 import MultiwayTreeZipper exposing (..)
 
+
+--
+
+{-|
+-}
+styles : List Mixin -> Html.Attribute msg
+styles =
+    asPairs >> Attr.style
 
 --
 
@@ -60,41 +74,6 @@ commandMap tree model command =
     RadioField_Update id value ->
       RadioField_Updated id value
 
-
-updateTreeById : Tree (SectionKinds model) -> String -> model -> (Leafs model -> model) -> model
-updateTreeById tree id model leafMap =
-  tree
-  |> flatten
-  |> List.foldr
-    (\ datum model ->
-      case Debug.log "UPDATE TREE" datum of
-
-        Branch _ -> model
-        
-        Leaf leaf ->
-
-          case Debug.log "UPDATE LEAF" leaf of
-
-            LabeledTextField _ -> model
-
-            BoolField def ->
-              if def.id == id then
-                leafMap leaf
-              else
-                model
-
-            InputField def ->
-              if def.id == id then  
-                leafMap leaf
-              else
-                model
-
-            RadioField def ->
-              if def.id == id then  
-                leafMap leaf
-              else
-                model
-    ) model
 
 
 eventMap : Branches model -> model -> Event -> ( model, Maybe Effect )
@@ -134,9 +113,35 @@ eventMap root model event =
     ( model_, Nothing )
 
 
+type SectionKinds model
+  = Branch (Branches model)
+  | Leaf (Leafs model)
+
+
+type Branches model
+  = Conditional (ConditionalModel model) (List (SectionKinds model))
+  | Header HeaderModel (List (SectionKinds model))
+  | Grid GridModel (List (SectionKinds model))
+  | List ListModel (List (SectionKinds model))
+  | Bullets BulletsModel (List (SectionKinds model))
+
+
+type Leafs model
+  = InputField (InputFieldModel model)
+  | LabeledTextField LabeledTextFieldModel
+  | RadioField (RadioFieldModel model)
+  | BoolField (BoolFieldModel model)
+
+
 type BulletTypes
   = AlphaBullet
   | NumericBullet
+
+
+type alias ConditionalModel model =
+  { predicate : model -> Bool
+  , hide : Bool -- otherwise fade
+  }
 
 
 type alias HeaderModel =
@@ -161,62 +166,21 @@ type alias BulletsModel =
   , type_ : BulletTypes
   , show : Bool
   }
-
-type Branches model
-  = Header HeaderModel (List (SectionKinds model))
-  | Grid GridModel (List (SectionKinds model))
-  | List ListModel (List (SectionKinds model))
-  | Bullets BulletsModel (List (SectionKinds model))
-
-type Leafs model
-  = InputField (InputFieldModel model)
-  | LabeledTextField LabeledTextFieldModel
-  | RadioField (RadioFieldModel model)
-  | BoolField (BoolFieldModel model)
-
-type SectionKinds model
-  = Branch (Branches model)
-  | Leaf (Leafs model)
-
-toTree : Branches model -> Tree (SectionKinds model)
-toTree root =
-  let
-
-    zipper : SectionKinds model -> Tree (SectionKinds model)
-    zipper node =
-      case node of
-
-        Leaf leaf -> Tree node []
-
-        Branch branch ->
-          let
-            children = case branch of
-            Header _ children -> children
-            Grid _ children -> children
-            List _ children -> children
-            Bullets _ children -> children
-          in
-            children
-            |> List.map (\ child ->
-                zipper child
-              )
-            |> Tree node
-
-  in
-    zipper <| Branch root
-          
+   
 
 type alias InputFieldModel model =
   { id : String
   , label : String
   , placeholder : String
+  , error : Bool
   , get : model -> String
   , set : model -> String -> model
   }
 
 
 type alias LabeledTextFieldModel =
-  { label : String
+  { id : String
+  , label : String
   , text : String
   }
 
@@ -263,6 +227,7 @@ buildForm formDef model =
   in
     applyZipper 0 0 ( toTree formDef, [] )
 
+
 leafToForm : Zipper (SectionKinds model) -> Leafs model -> model -> Html Command
 leafToForm ctx leaf model =
   case leaf of
@@ -272,29 +237,62 @@ leafToForm ctx leaf model =
         , yesLabel = "Yes"
         , noLabel = "No"
         , value = (def.get model)
-        , error = Nothing
-        , onChange = BoolField_Update def.id
+        , onChange = BoolField_Update
         }
 
 
     InputField def ->
-      UI.inputField
+      UI.FieldLabel.view
         { id = def.id
         , label = def.label
-        , placeholder = def.placeholder
-        , inputType = UI.TextField
-        , value = (def.get model)
-        , error = Nothing
-        , onInput = InputField_Update def.id
+        , error = def.error
         }
+        [ UI.Input.view
+          { id = def.id
+          -- , label = def.label
+          , placeholder = def.placeholder
+          , inputType = UI.Input.TextField
+          , value = (def.get model)
+          , error = False
+          , onInput = InputField_Update
+          }
+        ]
+
+        -- UI.labeledInput
+        --   { id = def.id
+        --   , label = def.label
+        --   , placeholder = def.placeholder
+        --   , inputType = UI.TextField
+        --   , value = (def.get model)
+        --   , error = False
+        --   , onInput = InputField_Update
+        --   }
 
 
     LabeledTextField def ->
-      UI.labelField
-        { id = ""
-        , label = def.label
-        , value = def.text
-        }
+      UI.FieldLabel.view
+          { id = def.id
+          , label = def.label
+          , error = False
+          }
+          [ span
+              [
+              ]
+              [ Html.text def.text
+              ]
+          ]
+      --     [ UI.Text.view
+      --       { id = def.id
+      --       , value = def.text
+      --       , error = False
+      --       }
+      --     ]
+-- LabeledTextField def ->
+      -- UI.labelField
+      --   { id = ""
+      --   , label = def.label
+      --   , value = def.text
+      --   }
 
 
     RadioField def ->
@@ -315,6 +313,250 @@ leafToForm ctx leaf model =
         }
 
 
+branchToForm : Zipper (SectionKinds model) -> Branches model -> model -> List (Html Command) -> Html Command
+branchToForm zipper branch model children =
+  let
+    ( subtree, crumbs ) = zipper
+  in
+    case branch of
+      Conditional def _ ->
+        div
+            [ styles <|
+                [
+                ] ++
+                if not (def.predicate model) then
+                  if def.hide then
+                    [ property "visibility" "hidden"
+                    , property "user-select" "none"
+                    , display none
+                    ]
+                  else
+                    [ opacity (num 0.4)
+                    , property "user-select" "none"
+                    ]
+                else
+                  []
+            ]
+            children
+            -- <| (
+            -- if not (def.predicate model) then
+            --   [ div
+            --     [ styles
+            --         [ backgroundColor (rgba 255 0 0 0.5)
+            --         , position relative
+            --         , top (px 0)
+            --         , left (px 0)
+            --         ]
+            --     ]
+            --     []
+            --   ]
+            -- else
+            --   []
+            -- ) ++ children
+
+
+      Header def _ ->
+        UI.formControl
+          { id = def.id
+          , header = Just
+            [ Html.text <| def.title
+            ]
+          , section = Just children
+          , aside = Nothing
+          , footer = Nothing
+          }
+
+      Grid def _ ->
+        UI.FieldLabel.view
+          { id = ""
+          , label = def.title
+          , error = False
+          }
+          [ div
+              [ styles
+                [ displayFlex
+                , flex (int 1)
+                , flexDirection column
+                , display block
+                ]
+              ] <|
+              List.map (\child ->
+                  div
+                    [ styles
+                        [ float left
+                        , displayFlex
+                        , width (pct 50)
+                        ]
+                    ]
+                    [ span
+                        [ styles
+                            [ padding (px 10)
+                            , width (pct 100)
+                            ]
+                        ]
+                        [ child
+                        ]
+                    ]
+                ) children
+          ]
+
+      List def _ ->
+        UI.FieldLabel.view
+          { id = ""
+          , label = def.title
+          , error = False
+          }
+          [ div
+              [ styles
+                [ displayFlex
+                , flex (int 1)
+                , flexDirection column
+                , display block
+                ]
+              ] <|
+              List.map (\child ->
+                  div
+                    [ styles
+                        [ float left
+                        , displayFlex
+                        , width (pct 100)
+                        ]
+                    ]
+                    [ span
+                        [ styles
+                            [ padding (px 10)
+                            , width (pct 100)
+                            ]
+                        ]
+                        [ child
+                        ]
+                    ]
+                ) children
+          ]
+
+      Bullets def _ ->
+        div
+          [ styles
+              [ paddingLeft (px 15)
+              , marginTop (px 20)
+              , marginBottom (px 20)
+              , borderLeft3 (px 1) solid (rgba 128 128 128 0.1)
+              ]
+          ]
+          [ span
+              [ styles
+                  [ displayFlex
+                  -- , paddingRight (px 10)
+                  , paddingBottom (px 5)
+                  , fontSize (Css.em 1.1)
+                  , borderBottom3 (px 1) solid (rgba 128 128 128 0.3)
+                  ]
+              ]
+              [ span
+                [ styles
+                    [ paddingRight (px 10)
+                    , fontWeight bold
+                    ]
+                ]
+                [ Html.text <| (bulletString zipper) --++ " - "
+                ]
+              , span
+                [ styles
+                    [ flex (int 1)
+                    ]
+                ]
+                [ Html.text def.title
+                ]
+              ]
+          , div
+              [ styles
+                  [ paddingTop (px 20)
+                  , paddingLeft (px 10)
+                  ]
+              ]
+              children
+          ]
+
+
+keepJusts : List (Maybe a) -> List a
+keepJusts list = 
+  case list of 
+    [] ->
+      []
+    mx :: xs ->
+      case mx of 
+        Nothing ->
+          keepJusts xs
+          
+        Just x ->
+          x :: keepJusts xs
+
+
+toTree : Branches model -> Tree (SectionKinds model)
+toTree root =
+  let
+
+    zipper : SectionKinds model -> Tree (SectionKinds model)
+    zipper node =
+      case node of
+
+        Leaf leaf -> Tree node []
+
+        Branch branch ->
+          let
+            children = case branch of
+              Conditional _ children -> children
+              Header _ children -> children
+              Grid _ children -> children
+              List _ children -> children
+              Bullets _ children -> children
+          in
+            children
+            |> List.map (\ child ->
+                zipper child
+              )
+            |> Tree node
+
+  in
+    zipper <| Branch root
+
+
+updateTreeById : Tree (SectionKinds model) -> String -> model -> (Leafs model -> model) -> model
+updateTreeById tree id model leafMap =
+  tree
+  |> flatten
+  |> List.foldr
+    (\ datum model ->
+      case Debug.log "UPDATE TREE" datum of
+
+        Branch _ -> model
+        
+        Leaf leaf ->
+
+          case Debug.log "UPDATE LEAF" leaf of
+
+            LabeledTextField _ -> model
+
+            BoolField def ->
+              if def.id == id then
+                leafMap leaf
+              else
+                model
+
+            InputField def ->
+              if def.id == id then  
+                leafMap leaf
+              else
+                model
+
+            RadioField def ->
+              if def.id == id then  
+                leafMap leaf
+              else
+                model
+    ) model
+
+    
 bulletString : Zipper (SectionKinds model) -> String
 bulletString ctx =
   let
@@ -366,11 +608,15 @@ bulletString ctx =
 
     applyZipper depth label ((subtree, crumbs) as zipper) =
       let
-        label_ = (bulletStringZipper depth zipper) ++
-          if String.length label == 0 then
+        bulletLabel = (bulletStringZipper depth zipper)
+        label_ = bulletLabel ++
+          if label == "" then
             ""
           else
-            "." ++ label
+            if String.startsWith "." label then
+              label
+            else
+              "." ++ label
       in
         case goUp zipper of
           Nothing -> label
@@ -378,64 +624,3 @@ bulletString ctx =
               applyZipper (depth + 1) label_ parent
   in
     applyZipper 0 "" ctx
-
-
-branchToForm : Zipper (SectionKinds model) -> Branches model -> model -> List (Html Command) -> Html Command
-branchToForm zipper branch model children =
-  let
-    ( subtree, crumbs ) = zipper
-  in
-    case branch of
-      Header def _ ->
-        UI.formControl
-          { id = def.id
-          , header = Just
-            [ Html.text <| def.title
-            ]
-          , section = Just children
-          , aside = Nothing
-          , footer = Nothing
-          }
-
-      Grid def _ ->
-        div
-          []
-          [ Html.text <| "Grid: [" ++ def.title ++ "]"
-          , div [] children
-          ]
-      
-      List def _ ->
-        div
-          []
-          [ Html.text <| "List: [" ++ def.title ++ "]"
-          , div [] children
-          ]
-
-      Bullets def _ ->
-        div
-          []
-          [ span
-              []
-              [ Html.text <| (bulletString zipper) ++ "  "
-              ]
-          , span
-              []
-              [ Html.text def.title
-              ]
-          , div
-              []
-              children
-          ]
-
-keepJusts : List (Maybe a) -> List a
-keepJusts list = 
-  case list of 
-    [] ->
-      []
-    mx :: xs ->
-      case mx of 
-        Nothing ->
-          keepJusts xs
-          
-        Just x ->
-          x :: keepJusts xs

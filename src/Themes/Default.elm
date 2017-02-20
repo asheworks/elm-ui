@@ -10,17 +10,18 @@ module Themes.Default exposing
 
 import Css exposing (..)
 import Css.Namespace exposing (namespace)
--- import Html.CssHelpers exposing (Namespace)
-import UI exposing (..)
+import UI.Theme exposing (..)
 
+-- import Html.CssHelpers exposing (Namespace)
+-- import UI exposing (..)
 --, border3 (px 1) solid (hex "#f00")
 
 {-| css
 
 -}
-css : UI.Theme b command -> Stylesheet
-css themeNamespace =
-    (stylesheet << namespace themeNamespace.name)
+css : Theme b command -> Stylesheet
+css ns =
+    (stylesheet << namespace ns.name)
         [ (.) Theme_Error
             [
             ]
@@ -87,49 +88,49 @@ css themeNamespace =
             [
             ]
 
-        , (.) Theme_InputField_Wrapper
-            [ flex (int 1)
-            ]
-        , (.) Theme_InputField
-            [
-            ]
-        , (.) Theme_InputField_Label
-            [ fontSize (Css.em 1)
-            , property "user-select" "none"
-            ]
-        , (.) Theme_InputField_Input
-            [ flex (int 1)
-            , padding2 (px 5) (px 10)
-            , fontSize (Css.em 1.1)
-            , borderRadius (px 4)
-            , border3 (px 1) solid (hex "#BBB")
-            -- , marginBottom (px 20)
-            ]
-        , (.) Theme_InputField_Input_Error
-            [ outline3 (px 1) solid (hex "#f00")
-            ]
-        , (.) Theme_InputField_Error
-            [
-            ]
+        -- , (.) Theme_InputField_Wrapper
+        --     [ flex (int 1)
+        --     ]
+        -- , (.) Theme_InputField
+        --     [
+        --     ]
+        -- , (.) Theme_InputField_Label
+        --     [ fontSize (Css.em 1)
+        --     , property "user-select" "none"
+        --     ]
+        -- , (.) Theme_InputField_Input
+        --     [ flex (int 1)
+        --     , padding2 (px 5) (px 10)
+        --     , fontSize (Css.em 1.1)
+        --     , borderRadius (px 4)
+        --     , border3 (px 1) solid (hex "#BBB")
+        --     -- , marginBottom (px 20)
+        --     ]
+        -- , (.) Theme_InputField_Input_Error
+        --     [ outline3 (px 1) solid (hex "#f00")
+        --     ]
+        -- , (.) Theme_InputField_Error
+        --     [
+        --     ]
 
-        , (.) Theme_LabelField_Wrapper
-            [ flex (int 1)
-            , padding2 (px 5) (px 5)
-            ]
-        , (.) Theme_LabelField
-            [
-            ]
-        , (.) Theme_LabelField_Label
-            [ flex (int 1)
-            , color (rgb 64 64 64)
-            , paddingTop (px 10)
-            , fontSize (Css.em 1.2)
-            , property "user-select" "none"
-            , textAlign center
-            ]
-        , (.) Theme_LabelField_Value
-            [
-            ]
+        -- , (.) Theme_LabelField_Wrapper
+        --     [ flex (int 1)
+        --     , padding2 (px 5) (px 5)
+        --     ]
+        -- , (.) Theme_LabelField
+        --     [
+        --     ]
+        -- , (.) Theme_LabelField_Label
+        --     [ flex (int 1)
+        --     , color (rgb 64 64 64)
+        --     , paddingTop (px 10)
+        --     , fontSize (Css.em 1.2)
+        --     , property "user-select" "none"
+        --     , textAlign center
+        --     ]
+        -- , (.) Theme_LabelField_Value
+        --     [
+        --     ]
 
         , (.) Theme_SubmitButton_Wrapper
             [ flex (int 1)
@@ -168,42 +169,42 @@ css themeNamespace =
             [
             ]
 
-        , (.) Theme_YesNoField_Wrapper
-            [ displayFlex
-            , flexDirection row
-            ]
-        , (.) Theme_YesNoField
-            [ displayFlex
-            , flexDirection row
-            ]
-        , (.) Theme_YesNoField_Button
-            [ width (px 50)
-            , height (px 25)
-            , padding2 (px 5) (px 10)
-            , border3 (px 1) solid (hex "#000")
-            , margin2 (px 5) (px 10)
-            , cursor pointer
-            , alignItems center
-            , textAlign center
-            ]
-        , (.) Theme_YesNoField_Button_Selected
-            [ border3 (px 3) solid (hex "#000")
-            ]
-        , (.) Theme_YesNoField_YesButton
-            [ backgroundColor (hex "#0f0")
-            ]
-        , (.) Theme_YesNoField_YesButton_Selected
-            [
-            ]
-        , (.) Theme_YesNoField_NoButton
-            [ backgroundColor (hex "#f00")
-            ]
-        , (.) Theme_YesNoField_NoButton_Selected
-            [
-            ]
-        , (.) Theme_YesNoField_Error
-            [
-            ]
+        -- , (.) Theme_YesNoField_Wrapper
+        --     [ displayFlex
+        --     , flexDirection row
+        --     ]
+        -- , (.) Theme_YesNoField
+        --     [ displayFlex
+        --     , flexDirection row
+        --     ]
+        -- , (.) Theme_YesNoField_Button
+        --     [ width (px 50)
+        --     , height (px 25)
+        --     , padding2 (px 5) (px 10)
+        --     , border3 (px 1) solid (hex "#000")
+        --     , margin2 (px 5) (px 10)
+        --     , cursor pointer
+        --     , alignItems center
+        --     , textAlign center
+        --     ]
+        -- , (.) Theme_YesNoField_Button_Selected
+        --     [ border3 (px 3) solid (hex "#000")
+        --     ]
+        -- , (.) Theme_YesNoField_YesButton
+        --     [ backgroundColor (hex "#0f0")
+        --     ]
+        -- , (.) Theme_YesNoField_YesButton_Selected
+        --     [
+        --     ]
+        -- , (.) Theme_YesNoField_NoButton
+        --     [ backgroundColor (hex "#f00")
+        --     ]
+        -- , (.) Theme_YesNoField_NoButton_Selected
+        --     [
+        --     ]
+        -- , (.) Theme_YesNoField_Error
+        --     [
+        --     ]
 
         ]
 

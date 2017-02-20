@@ -7,7 +7,7 @@ import Css.File exposing (CssFileStructure, CssCompilerProgram, compile, toFileS
 
 -- import Reset as Reset
 
-import UI as UI
+import UI.Theme as UI
 import Themes.Default as Theme
 import Example.Style as Example
 -- import LogIn.Style as LogIn
@@ -24,6 +24,10 @@ cssFiles =
                 , Theme.css UI.theme
                 ]
           )
+        -- , ( "theme.css"
+        --   , Css.File.compile
+        --       Theme.theme
+        --   )
         , ( "styles.css"
           , Css.File.compile
                 [ Example.css

@@ -1,10 +1,5 @@
 module UI exposing
-  ( ThemeCssClasses(..)
-  , Theme
-  , theme
-  , styles
-
-  , errorLabel
+  ( errorLabel
   , hiddenStyle
   , h1Label
   , h2Label
@@ -21,10 +16,10 @@ module UI exposing
   , checkboxEntry
   , checkboxControl
 
-  , InputTypes(..)
-  , InputModel
-  , inputType
-  , inputField
+--   , InputTypes(..)
+--   , InputModel
+--   , inputType
+--   , inputField
 
   , LabelModel
   , labelField
@@ -35,16 +30,12 @@ module UI exposing
   , TextAreaModel
   , textAreaField
 
-  , YesNoFieldModel
-  , yesNoField
+--   , YesNoFieldModel
+--   , yesNoField
 
   )
 
 {-| This library contains common UI control definitions
-
-## Style Definitions
-@docs theme, ThemeCssClasses, Theme
-@docs styles
 
 ## Form Element Types
 
@@ -76,9 +67,9 @@ module UI exposing
 
 @docs TextAreaModel, textAreaField
 
-## YesNo
+-- ## YesNo
 
-@docs YesNoModel, yesNoField
+-- @docs YesNoModel, yesNoField
 
 
 -}
@@ -97,90 +88,10 @@ import Html.CssHelpers exposing (Namespace, withNamespace)
 import Html.Events exposing (onInput, onClick)
 import Css exposing (..)
 
-import Array exposing (..)
+-- import Array exposing (..)
 --
 
-{-| namespace
-
-Isolates theme related styles from other css definitions
-
--}
-theme : Namespace String a b c
-theme =
-    withNamespace "AsheWorks--Elm-UI--Theme--"
-
-{-| ThemeCssClasses
--}
-type ThemeCssClasses
-    = Theme_Error
-
-    | Theme_FormWrapper
-    | Theme_FormHeader
-    | Theme_FormSection
-    | Theme_FormAside
-    | Theme_FormFooter
-
-    | Theme_FormTitle
-    | Theme_FormError
-
-    | Theme_Section_Wrapper
-    | Theme_Section_Header
-
-    | Theme_FieldSet_Wrapper
-
-    | Theme_CheckboxField_Wrapper
-    | Theme_CheckboxField_UnorderedList
-    | Theme_CheckboxField_ListItem
-    | Theme_CheckboxField
-    | Theme_CheckboxField_Label
-    | Theme_CheckboxField_Input
-    | Theme_CheckboxField_Input_Error
-    | Theme_CheckboxField_Error
-
-    | Theme_InputField_Wrapper
-    | Theme_InputField
-    | Theme_InputField_Label
-    | Theme_InputField_Input
-    | Theme_InputField_Input_Error
-    | Theme_InputField_Error
-
-    | Theme_LabelField_Wrapper
-    | Theme_LabelField
-    | Theme_LabelField_Label
-    | Theme_LabelField_Value
-
-    | Theme_SubmitButton_Wrapper
-    | Theme_SubmitButton
-    | Theme_SubmitButton_Label
-
-    | Theme_TextAreaField_Wrapper
-    | Theme_TextAreaField
-    | Theme_TextAreaField_Label
-    | Theme_TextAreaField_Input
-    | Theme_TextAreaField_Input_Error
-    | Theme_TextAreaField_Error
-
-    | Theme_YesNoField_Wrapper
-    | Theme_YesNoField
-    | Theme_YesNoField_Button
-    | Theme_YesNoField_Button_Selected
-    | Theme_YesNoField_YesButton
-    | Theme_YesNoField_YesButton_Selected
-    | Theme_YesNoField_NoButton
-    | Theme_YesNoField_NoButton_Selected
-    | Theme_YesNoField_Error
-
-
-{-| Theme
-
--}
-type alias Theme b command = Namespace String ThemeCssClasses b command
-
-{-|
--}
-styles : List Mixin -> Html.Attribute msg
-styles =
-    asPairs >> Attr.style
+import UI.Theme exposing (..)
 
 {-|
 -}
@@ -406,82 +317,83 @@ checkboxControl model =
         , errorLabel Theme_CheckboxField_Error model.error
         ]
 
-{-| InputTypes
--}
-type InputTypes
-    = TextField
-    | PasswordField
 
-{-| InputModel
+-- {-| InputTypes
+-- -}
+-- type InputTypes
+--     = TextField
+--     | PasswordField
 
-State for an input text box with placeholder and validation labels
+-- {-| InputModel
 
--}
-type alias InputModel command =
-    { id : String
-    , label : String
-    , placeholder : String
-    , inputType : InputTypes
-    , value : String
-    , error : Maybe String
-    , onInput : String -> command
-    }
+-- State for an input text box with placeholder and validation labels
 
-{-| inputType
--}
-inputType : InputTypes -> Attribute msg
-inputType value =
-    case value of
+-- -}
+-- type alias InputModel command =
+--     { id : String
+--     , label : String
+--     , placeholder : String
+--     , inputType : InputTypes
+--     , value : String
+--     , error : Maybe String
+--     , onInput : String -> command
+--     }
 
-        TextField -> Attr.type_ "text"
+-- {-| inputType
+-- -}
+-- inputType : InputTypes -> Attribute msg
+-- inputType value =
+--     case value of
 
-        PasswordField -> Attr.type_ "password"
+--         TextField -> Attr.type_ "text"
 
-{-| inputField
--}
-inputField : InputModel command -> Html command
-inputField model =
-    div
-        [ theme.class
-            [ Theme_InputField_Wrapper
-            ]
-        , Attr.id model.id
-        ]
-        [ label
-            [ theme.class
-                [ Theme_InputField
-                ]
-            , Attr.for <| model.id ++ "-inputField"
-            ]
-            [ span
-                [ theme.class
-                    [ Theme_InputField_Label
-                    ]
-                ]
-                [ Html.text model.label
-                ]
-            , input
-                [ Attr.id <| model.id ++ "-inputField"
-                , theme.class <|
-                    case model.error of
-                        Nothing ->
-                            [ Theme_InputField_Input
-                            ]
-                        Just _ ->
-                            [ Theme_InputField_Input
-                            , Theme_InputField_Input_Error
-                            ]
-                , Attr.placeholder model.placeholder
-                , inputType model.inputType
-                , Attr.defaultValue model.value
-                , Attr.value model.value
-                , onInput model.onInput
-                ]
-                [
-                ]
-            , errorLabel Theme_InputField_Error model.error
-            ]
-        ]
+--         PasswordField -> Attr.type_ "password"
+
+-- {-| inputField
+-- -}
+-- inputField : InputModel command -> Html command
+-- inputField model =
+--     div
+--         [ theme.class
+--             [ Theme_InputField_Wrapper
+--             ]
+--         , Attr.id model.id
+--         ]
+--         [ label
+--             [ theme.class
+--                 [ Theme_InputField
+--                 ]
+--             , Attr.for <| model.id ++ "-inputField"
+--             ]
+--             [ span
+--                 [ theme.class
+--                     [ Theme_InputField_Label
+--                     ]
+--                 ]
+--                 [ Html.text model.label
+--                 ]
+--             , input
+--                 [ Attr.id <| model.id ++ "-inputField"
+--                 , theme.class <|
+--                     case model.error of
+--                         Nothing ->
+--                             [ Theme_InputField_Input
+--                             ]
+--                         Just _ ->
+--                             [ Theme_InputField_Input
+--                             , Theme_InputField_Input_Error
+--                             ]
+--                 , Attr.placeholder model.placeholder
+--                 , inputType model.inputType
+--                 , Attr.defaultValue model.value
+--                 , Attr.value model.value
+--                 , onInput model.onInput
+--                 ]
+--                 [
+--                 ]
+--             , errorLabel Theme_InputField_Error model.error
+--             ]
+--         ]
 
 {-| LabelModel
 
@@ -580,7 +492,7 @@ type alias TextAreaModel command =
     , cols : Int
     , value : String
     , error : Maybe String
-    , onInput : String -> command
+    , onInput : String -> String -> command
     }
 
 {-| textAreaField
@@ -622,7 +534,7 @@ textAreaField model =
                 , Attr.cols model.cols
                 , Attr.defaultValue model.value
                 , Attr.value model.value
-                , onInput model.onInput
+                , onInput <| model.onInput model.id
                 ]
                 [
                 ]
@@ -631,67 +543,67 @@ textAreaField model =
         ]
 
 
-{-| YesNoFieldModel
+-- {-| YesNoFieldModel
 
-State for a yes no selection control
+-- State for a yes no selection control
 
--}
-type alias YesNoFieldModel command =
-    { id : String
-    , yesLabel : String
-    , noLabel : String
-    , value : Bool
-    , error : Maybe String
-    , onChange : Bool -> command
-    }
+-- -}
+-- type alias YesNoFieldModel command =
+--     { id : String
+--     , yesLabel : String
+--     , noLabel : String
+--     , value : Bool
+--     , error : Maybe String
+--     , onChange : Bool -> command
+--     }
 
-{-| yesNoField
--}
-yesNoField : YesNoFieldModel command -> Html command
-yesNoField model =
-    div
-        [ theme.class
-            [ Theme_YesNoField_Wrapper
-            ]
-        , Attr.id model.id
-        ]
-        [ label
-            [ theme.class
-                [ Theme_YesNoField
-                ]
-            ]
-            [ div
-                [ theme.class
-                  <| List.append
-                    [ Theme_YesNoField_Button
-                    , Theme_YesNoField_YesButton
-                    ]
-                    <| if model.value then
-                      [ Theme_YesNoField_Button_Selected
-                      , Theme_YesNoField_YesButton_Selected
-                      ]
-                    else
-                      []
-                , onClick <| model.onChange True
-                ]
-                [ Html.text model.yesLabel
-                ]
-            , div
-                [ theme.class
-                  <| List.append
-                    [ Theme_YesNoField_Button
-                    , Theme_YesNoField_NoButton
-                    ]
-                    <| if not model.value then
-                      [ Theme_YesNoField_Button_Selected
-                      , Theme_YesNoField_NoButton_Selected
-                      ]
-                    else
-                      []
-                , onClick <| model.onChange False
-                ]
-                [ Html.text model.noLabel
-                ]
-            ]
-        , errorLabel Theme_YesNoField_Error model.error
-        ]
+-- {-| yesNoField
+-- -}
+-- yesNoField : YesNoFieldModel command -> Html command
+-- yesNoField model =
+--     div
+--         [ theme.class
+--             [ Theme_YesNoField_Wrapper
+--             ]
+--         , Attr.id model.id
+--         ]
+--         [ label
+--             [ theme.class
+--                 [ Theme_YesNoField
+--                 ]
+--             ]
+--             [ div
+--                 [ theme.class
+--                   <| List.append
+--                     [ Theme_YesNoField_Button
+--                     , Theme_YesNoField_YesButton
+--                     ]
+--                     <| if model.value then
+--                       [ Theme_YesNoField_Button_Selected
+--                       , Theme_YesNoField_YesButton_Selected
+--                       ]
+--                     else
+--                       []
+--                 , onClick <| model.onChange True
+--                 ]
+--                 [ Html.text model.yesLabel
+--                 ]
+--             , div
+--                 [ theme.class
+--                   <| List.append
+--                     [ Theme_YesNoField_Button
+--                     , Theme_YesNoField_NoButton
+--                     ]
+--                     <| if not model.value then
+--                       [ Theme_YesNoField_Button_Selected
+--                       , Theme_YesNoField_NoButton_Selected
+--                       ]
+--                     else
+--                       []
+--                 , onClick <| model.onChange False
+--                 ]
+--                 [ Html.text model.noLabel
+--                 ]
+--             ]
+--         , errorLabel Theme_YesNoField_Error model.error
+--         ]
