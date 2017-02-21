@@ -332,7 +332,7 @@ checkboxEntry parentModel index model =
                         , height (px 24)
                         -- , borderRadius (px 100)
 
-                        , property "transition" "all .2s ease"
+                        -- , property "transition" "all .2s ease"
                         , cursor pointer
                         , position absolute
                         , top (px 3)

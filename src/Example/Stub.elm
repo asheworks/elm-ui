@@ -39,21 +39,22 @@ stub =
 
 view : Html.Html command -> Html.Html command
 view child =
-    div
-        [ styles
-            [ backgroundColor (hex "#EEE")
-            , property "width" "calc(100vw - 150px)"
-            , property "height" "calc(100vh - 150px)"
-            , minWidth (px 800)
-            , minHeight (px 600)
-            , marginLeft (px 25)
-            , marginTop (px 25)
-            , padding (px 50)
-            , overflow scroll
-            ]
-        ]
-        [ child
-        ]
+    child
+    -- div
+    --     [ styles
+    --         [ backgroundColor (hex "#EEE")
+    --         , property "width" "calc(100vw - 150px)"
+    --         , property "height" "calc(100vh - 150px)"
+    --         , minWidth (px 800)
+    --         , minHeight (px 600)
+    --         , marginLeft (px 25)
+    --         , marginTop (px 25)
+    --         , padding (px 50)
+    --         , overflow scroll
+    --         ]
+    --     ]
+    --     [ child
+    --     ]
 
 
 eventHandler : ( Model, Effect ) -> Cmd msg

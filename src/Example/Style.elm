@@ -38,15 +38,15 @@ css =
         , (.) Container
             [ displayFlex
             , flexDirection column
-            , padding (px 20)
-            , borderBottom3 (px 1) solid (hex "#a00")
-            , borderRight3 (px 1) solid (hex "#a00")
+            -- , padding (px 20)
+            -- , borderBottom3 (px 1) solid (hex "#a00")
+            -- , borderRight3 (px 1) solid (hex "#a00")
             ]
-        , (.) Label
-            [ padding (px 10)
-            , borderBottom3 (px 1) solid (hex "#555")
-            , fontSize (em 1.2)
-            , color (hex "#833")
-            , marginBottom (px 20)
-            ]
+        -- , (.) Label
+        --     [ padding (px 10)
+        --     , borderBottom3 (px 1) solid (hex "#555")
+        --     , fontSize (em 1.2)
+        --     , color (hex "#833")
+        --     , marginBottom (px 20)
+        --     ]
         ]

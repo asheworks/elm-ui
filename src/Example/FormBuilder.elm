@@ -63,7 +63,7 @@ type Effect
 
 commandMap : Branches model -> model -> Command -> Event
 commandMap tree model command =
-  case Debug.log "FormBuilder - CommandMap" command of
+  case command of
     
     BoolField_Update id value ->
       BoolField_Updated id value
@@ -80,7 +80,7 @@ eventMap : Branches model -> model -> Event -> ( model, Maybe Effect )
 eventMap root model event =
   let
     tree = toTree root
-    model_ = case Debug.log "FormBuilder - EventMap" event of
+    model_ = case event of
 
     BoolField_Updated id value ->
       updateTreeById tree id model
@@ -529,13 +529,13 @@ updateTreeById tree id model leafMap =
   |> flatten
   |> List.foldr
     (\ datum model ->
-      case Debug.log "UPDATE TREE" datum of
+      case datum of
 
         Branch _ -> model
         
         Leaf leaf ->
 
-          case Debug.log "UPDATE LEAF" leaf of
+          case leaf of
 
             LabeledTextField _ -> model
 
