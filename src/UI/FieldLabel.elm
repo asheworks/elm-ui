@@ -73,7 +73,8 @@ view model children =
       [ styles <|
         [ property "user-select" "none"
         , textAlign center
-        , fontSize (Css.em 1.1)
+        , fontSize (Css.em 1.3)
+        , textDecoration underline
         , displayFlex
         , property "align-content" "flex-start"
         , padding2 (px 10) (px 0)

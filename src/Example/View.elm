@@ -42,17 +42,26 @@ wrapper ( label, child ) =
 
 view : Model -> Html Command
 view model =
-    List.map wrapper
-        [ ( "Form Builder"
-          , Html.map FormBuilder_Command <| FormBuilder.buildForm questionnaire model.questionnaire.state
-          )
-        -- , ( "Simple Input Form", simpleInputForm )
-        -- , ( "Simple Input Form with Error", simpleInputFormWithError )
-        -- , ( "Simple Text Area Form", simpleTextAreaForm )
-        -- , ( "Simple Checkbox Form", simpleCheckboxForm )
-        -- , ( "Complex Form", complexForm )        
-        ]
-        |> div [ class [ Component ] ]
+    formBuilder model
+
+    -- List.map wrapper
+    --     [ ( "Form Builder"
+    --       , Html.map FormBuilder_Command <| FormBuilder.buildForm questionnaire model.questionnaire.state
+    --       )
+    --     -- , ( "Simple Input Form", simpleInputForm )
+    --     -- , ( "Simple Input Form with Error", simpleInputFormWithError )
+    --     -- , ( "Simple Text Area Form", simpleTextAreaForm )
+    --     -- , ( "Simple Checkbox Form", simpleCheckboxForm )
+    --     -- , ( "Complex Form", complexForm )        
+    --     ]
+    --     |> div [ class [ Component ] ]
+
+formBuilder : Model -> Html Command
+formBuilder model =
+    Html.map FormBuilder_Command
+        <| FormBuilder.buildForm
+            questionnaire
+            model.questionnaire.state
 
 simpleInputForm : Html Command
 simpleInputForm =

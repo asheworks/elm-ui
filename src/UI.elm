@@ -205,13 +205,23 @@ formControl model =
         , Attr.id model.id
         ]
         [ header
-            [ theme.class
+            [ styles
+                [ fontSize (Css.em 2)
+                , textAlign center
+                , backgroundColor (hex "#555")
+                , color (hex "#DDD")
+                , padding (px 30)
+                ]
+            , theme.class
                 [ Theme_FormHeader
                 ]
             ]
             <| Maybe.withDefault [] model.header
         , section
-            [ theme.class
+            [ styles
+                [ paddingTop (px 20)
+                ]
+            , theme.class
                 [ Theme_FormSection
                 ]
             ]
@@ -252,36 +262,97 @@ type alias CheckboxModel command =
 checkboxEntry : CheckboxModel command -> Int -> KeyValueError -> Html command
 checkboxEntry parentModel index model =
     label
-        [ theme.class
+        [ styles
+            [ displayFlex
+            , flexDirection rowReverse
+            -- , width (px 300)
+            ]
+        , theme.class
             [ Theme_CheckboxField
             ]
         ]
         [ span
-            [ theme.class
+            [ styles
+                [ property "user-select" "none"
+                , flex (int 1)
+                , displayFlex
+                , flexDirection column
+                , property "justify-content" "center"
+                , fontSize (Css.em 1.3)
+                ]
+            , theme.class
                 [ Theme_CheckboxField_Label
                 ]
             ]
             [ Html.text model.value
             ]
-        , input
-            [ Attr.id <| parentModel.id ++ toString index ++ "-checkboxField"
-            , theme.class <|
-                case model.error of
-                    Nothing ->
-                        [ Theme_CheckboxField_Input
-                        ]
-                    Just _ ->
-                        [ Theme_CheckboxField_Input
-                        , Theme_CheckboxField_Input_Error
-                        ]
-            , Attr.value model.key
-            , Attr.type_ "checkbox"
-            , Attr.checked model.checked
-            , onClick (parentModel.onSelect (index, model.key))
+        , div
+            [ styles
+                [ padding2 (px 10) (px 20) --flex (int 1)
+                ]
             ]
-            [
+            [ div
+                [ styles
+                    [ width (px 30)
+                    , height (px 30)
+                    , property "background" "#ddd"
+                    , displayFlex
+                    , flexDirection row
+                    -- , margin2 (px 20) (px 90)
+                    -- , borderRadius (pct 100)
+                    , position relative
+                    , boxShadow4 (px 0) (px 1) (px 2) (rgba 0 0 0 0.5)
+                    ]
+                , onClick (parentModel.onSelect (index, model.key))
+                ]
+                [ input
+                    [ Attr.id <| parentModel.id ++ toString index ++ "-checkboxField"
+                    , theme.class <|
+                        case model.error of
+                            Nothing ->
+                                [ Theme_CheckboxField_Input
+                                ]
+                            Just _ ->
+                                [ Theme_CheckboxField_Input
+                                , Theme_CheckboxField_Input_Error
+                                ]
+                    , Attr.value model.key
+                    , Attr.type_ "checkbox"
+                    , Attr.checked model.checked
+                    , styles
+                        [ display none
+                        ]
+                    ]
+                    [
+                    ]
+                , label
+                    [ styles <|
+                        [ display block
+                        , width (px 24)
+                        , height (px 24)
+                        -- , borderRadius (px 100)
+
+                        , property "transition" "all .2s ease"
+                        , cursor pointer
+                        , position absolute
+                        , top (px 3)
+                        , left (px 3)
+                        , property "z-index" "1"
+                        , property "box-shadow" "inset 0px 1px 2px rgba(0,0,0,0.5)"
+                        ] ++
+                        if model.checked then
+                            [ property "background" "#333"
+                            ]
+                        else
+                            [ property "background" "#ddd"
+                            ]
+                    ]
+                    [
+                    ]
+                ]
             ]
         ]
+
 
 checkboxListItem : Html command -> Html command
 checkboxListItem child =

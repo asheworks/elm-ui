@@ -448,13 +448,14 @@ branchToForm zipper branch model children =
                   [ displayFlex
                   -- , paddingRight (px 10)
                   , paddingBottom (px 5)
-                  , fontSize (Css.em 1.1)
+                  -- , fontSize (Css.em 1.3)
                   , borderBottom3 (px 1) solid (rgba 128 128 128 0.3)
                   ]
               ]
               [ span
                 [ styles
                     [ paddingRight (px 10)
+                    , fontSize (Css.em 1.3)
                     , fontWeight bold
                     ]
                 ]
@@ -463,6 +464,7 @@ branchToForm zipper branch model children =
               , span
                 [ styles
                     [ flex (int 1)
+                    , fontSize (Css.em 1.3)
                     ]
                 ]
                 [ Html.text def.title

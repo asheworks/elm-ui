@@ -72,8 +72,8 @@ selectedClass value =
 buttonStyle : Bool -> List Mixin
 buttonStyle selected =
   [ padding2 (px 10) (px 20)
-  , height (px 35)
-  , width (px 100)
+  , height (px 30)
+  , width (px 80)
   , margin (px 20)
   , displayFlex
   , alignItems center
