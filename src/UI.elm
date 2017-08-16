@@ -206,11 +206,11 @@ formControl model =
         ]
         [ header
             [ styles
-                [ fontSize (Css.em 2)
-                , textAlign center
-                , backgroundColor (hex "#555")
-                , color (hex "#DDD")
-                , padding (px 30)
+                [ --fontSize (Css.em 2)
+                -- , textAlign center
+                -- , backgroundColor (hex "#555")
+                -- , color (hex "#DDD")
+                -- , padding (px 30)
                 ]
             , theme.class
                 [ Theme_FormHeader
@@ -219,7 +219,7 @@ formControl model =
             <| Maybe.withDefault [] model.header
         , section
             [ styles
-                [ paddingTop (px 20)
+                [ --paddingTop (px 20)
                 ]
             , theme.class
                 [ Theme_FormSection
@@ -256,7 +256,9 @@ type alias CheckboxModel command =
     { id : String
     , values : List KeyValueError
     , error : Maybe String
-    , onSelect : (Int, String) -> command
+    , onSelect : String -> command
+    -- , onSelect : String -> String -> command
+    -- , onSelect : (Int, String) -> command
     }
 
 checkboxEntry : CheckboxModel command -> Int -> KeyValueError -> Html command
@@ -303,7 +305,8 @@ checkboxEntry parentModel index model =
                     , position relative
                     , boxShadow4 (px 0) (px 1) (px 2) (rgba 0 0 0 0.5)
                     ]
-                , onClick (parentModel.onSelect (index, model.key))
+                , onClick ( parentModel.onSelect model.key )
+                -- , onClick (parentModel.onSelect (index, model.key))
                 ]
                 [ input
                     [ Attr.id <| parentModel.id ++ toString index ++ "-checkboxField"
@@ -363,6 +366,7 @@ checkboxListItem child =
         ]
         [ child
         ]
+
 
 checkboxControl : CheckboxModel command -> Html command
 checkboxControl model =

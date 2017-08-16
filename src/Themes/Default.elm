@@ -27,8 +27,8 @@ css ns =
             ]
         
         , (.) Theme_FormWrapper
-            [ border3 (px 1) dashed (rgba 255 128 128 0.5)
-            , padding (px 15)
+            [ --border3 (px 1) dashed (rgba 255 128 128 0.5)
+            --, padding (px 15)
             ]
         , (.) Theme_FormHeader
             [
@@ -44,12 +44,12 @@ css ns =
             ]
 
         , (.) Theme_FormTitle
-            [ fontSize (px 30)
-            , color (hex "#555")
+            [ --fontSize (px 30)
+            --, color (hex "#555")
             ]
         , (.) Theme_FormError
             [ flex (int 1)
-            , color (hex "#900")
+            --, color (hex "#900")
             ]
 
         , (.) Theme_Section_Wrapper

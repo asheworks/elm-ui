@@ -1,9 +1,10 @@
-module UI.YesNo exposing
-  ( ThemeCssClasses(..)
-  , theme
-  , YesNoFieldModel
-  , yesNoField
-  )
+module UI.YesNo
+    exposing
+        ( ThemeCssClasses(..)
+        , theme
+        , YesNoFieldModel
+        , yesNoField
+        )
 
 import Html exposing (..)
 import Html.Attributes as Attr
@@ -33,12 +34,12 @@ theme =
 
 -}
 type ThemeCssClasses
-  = Theme_Wrapper
-  | Theme_Button
-  | Theme_Button_Selected
-  | Theme_Button_UnSelected
-  | Theme_YesButton
-  | Theme_NoButton
+    = Theme_Wrapper
+    | Theme_Button
+    | Theme_Button_Selected
+    | Theme_Button_UnSelected
+    | Theme_YesButton
+    | Theme_NoButton
 
 
 {-| YesNoFieldModel
@@ -50,86 +51,92 @@ type alias YesNoFieldModel command =
     { id : String
     , yesLabel : String
     , noLabel : String
-    , value : Bool
-    , onChange : String -> Bool -> command
+    , value : Maybe Bool
+    , onChange : Bool -> command
     }
 
 
 {-| selectedClass
 -}
-selectedClass : Bool -> List ThemeCssClasses
+selectedClass : Maybe Bool -> List ThemeCssClasses
 selectedClass value =
-  if value then
-    [ Theme_Button_Selected
-    ]
-  else
-    [ Theme_Button_UnSelected
-    ]
+    case value of
+        Just True ->
+            [ Theme_Button_Selected
+            ]
+
+        _ ->
+            [ Theme_Button_UnSelected
+            ]
 
 
 {-| buttonStyle
 -}
-buttonStyle : Bool -> List Mixin
+buttonStyle : Maybe Bool -> List Mixin
 buttonStyle selected =
-  [ padding2 (px 10) (px 20)
-  , height (px 30)
-  , width (px 80)
-  , margin (px 20)
-  , displayFlex
-  , alignItems center
-  , property "justify-content" "center"
-  , property "user-select" "none"
-  ] ++
-  if selected then
-    [ backgroundColor (hex "#333")
-    , outline3 (px 1) solid (hex "#ddd")
-    , color (hex "#fff")
-    , cursor default
+    [ padding2 (px 10) (px 20)
+    , height (px 30)
+    , width (px 80)
+    , margin (px 20)
+    , displayFlex
+    , alignItems center
+    , property "justify-content" "center"
+    , property "user-select" "none"
     ]
-  else
-    [ backgroundColor (hex "#ddd")
-    , outline3 (px 1) solid (hex "#555")
-    , color (hex "#333")
-    , cursor pointer
-    ]
+        ++ case selected of
+            Just True ->
+                --if selected then
+                [ backgroundColor (hex "#333")
+                , outline3 (px 1) solid (hex "#ddd")
+                , color (hex "#fff")
+                , cursor default
+                ]
+
+            _ ->
+                [ backgroundColor (hex "#ddd")
+                , outline3 (px 1) solid (hex "#555")
+                , color (hex "#333")
+                , cursor pointer
+                ]
+
 
 {-| yesNoField
 -}
 yesNoField : YesNoFieldModel command -> Html command
 yesNoField model =
-  div
-    [ styles
-        [ displayFlex
-        , flex (int 1)
-        , padding2 (px 10) (px 5)
-        ]
-    , theme.class
-        [ Theme_Wrapper
-        ]
-    , Attr.id model.id
-    ]
-    [ div
-        [ styles <|
-            buttonStyle model.value
-        , theme.class <|
-            selectedClass model.value ++
-            [ Theme_Button
-            , Theme_YesButton
+    div
+        [ styles
+            [ displayFlex
+            , flex (int 1)
+            , padding2 (px 10) (px 5)
             ]
-        , onClick <| model.onChange model.id True
-        ]
-        [ Html.text model.yesLabel
-        ]
-    , div
-        [ styles <|
-            buttonStyle (not model.value)
-        , theme.class <|
-            selectedClass (not model.value) ++
-            [ Theme_Button
-            , Theme_NoButton
+        , theme.class
+            [ Theme_Wrapper
             ]
-        , onClick <| model.onChange model.id False
+        , Attr.id model.id
         ]
-        [ Html.text model.noLabel
+        [ div
+            [ styles <|
+                buttonStyle model.value
+            , theme.class <|
+                selectedClass model.value
+                    ++ [ Theme_Button
+                       , Theme_YesButton
+                       ]
+            , onClick <| model.onChange True
+            ]
+            [ Html.text model.yesLabel
+            ]
+        , div
+            [ styles <|
+                buttonStyle (Maybe.map not model.value)
+            , theme.class <|
+                selectedClass (Maybe.map not model.value)
+                    ++ [ Theme_Button
+                       , Theme_NoButton
+                       ]
+            , onClick <| model.onChange False
+            ]
+            [ Html.text model.noLabel
+            ]
         ]
-    ]

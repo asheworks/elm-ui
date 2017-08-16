@@ -18,7 +18,7 @@ import CQRS exposing (State)
 --
 
 import Example.FormBuilder as FormBuilder
-import Example.Questionnaire as Questionnaire
+-- import Example.Questionnaire as Questionnaire
 --
 
 type alias ContextValues =
@@ -30,7 +30,7 @@ type alias Context =
 
 
 type alias Model =
-    { questionnaire : State Questionnaire.SampleData
+    { --questionnaire : State Questionnaire.SampleData
     }
 
 
@@ -66,5 +66,5 @@ mapValues values =
 
 defaultModel : Model
 defaultModel =
-    { questionnaire = State Questionnaire.sampleData
+    { --questionnaire = State Questionnaire.sampleData
     }

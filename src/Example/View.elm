@@ -5,12 +5,15 @@ import Set exposing (..)
 
 --
 
-import Example.FormBuilder as FormBuilder
+-- import Example.FormBuilder2 as FB2
+import Example.FormBuilder as FB3
+import Example.InfoSec as FB3
+-- import Example.FormBuilder as FormBuilder
 
 --
 import Example.Style exposing (..)
 import Example.Model exposing (Command(..), Model)
-import Example.Questionnaire exposing (..)
+-- import Example.Questionnaire exposing (..)
 --
 
 import UI as UI
@@ -38,12 +41,25 @@ wrapper ( label, child ) =
     ]
         |> div [ class [ Container ] ]
 
--- , Html.map FormBuilder_Command <| FormBuilder.buildForm questionnaire sampleData
+-- view : Model -> Html Command
+-- view model =
+--     Html.map FormBuilder_Command <| FormBuilder.buildForm questionnaire sampleData
 
 view : Model -> Html Command
 view model =
-    formBuilder model
+  let
+    form =
+      FB3.toForm
+      FB3.toDataType
+      FB3.infosec
+      { visible = False
+      }
+  in
+    Html.map FormBuilder_Command form.view
 
+
+-- view : Model -> Html Command
+-- view model =
     -- List.map wrapper
     --     [ ( "Form Builder"
     --       , Html.map FormBuilder_Command <| FormBuilder.buildForm questionnaire model.questionnaire.state
@@ -56,12 +72,16 @@ view model =
     --     ]
     --     |> div [ class [ Component ] ]
 
-formBuilder : Model -> Html Command
-formBuilder model =
-    Html.map FormBuilder_Command
-        <| FormBuilder.buildForm
-            questionnaire
-            model.questionnaire.state
+-- formBuilder : Model -> Html Command
+-- formBuilder model =
+--     Html.map FormBuilder_Command
+--         <| FormBuilder.buildForm
+--             questionnaire
+--             model.questionnaire.state
+
+-- formBuilder2 : Model -> Html Command
+-- formBuilder2 model =
+--     Html.map 
 
 simpleInputForm : Html Command
 simpleInputForm =

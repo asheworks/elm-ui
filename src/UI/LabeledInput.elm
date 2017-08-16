@@ -61,7 +61,7 @@ type alias InputModel command =
     , inputType : InputTypes
     , value : String
     , error : Bool
-    , onInput : String -> String -> command
+    , onInput : String -> command
     }
 
 
@@ -108,7 +108,7 @@ labeledInput model =
         , inputType model.inputType
         , Attr.defaultValue model.value
         , Attr.value model.value
-        , onInput <| model.onInput model.id
+        , onInput <| model.onInput
         ]
         [
         ]

@@ -1,15 +1,15 @@
-module UI.Input exposing
+module UI.Checkbox exposing
   ( theme
   , ThemeCssClasses(..)
   , InputTypes(..)
-  , InputModel
+  , Model
   , view
   )
 
 import Html exposing (..)
 import Html.Attributes as Attr
 import Html.CssHelpers exposing (Namespace, withNamespace)
-import Html.Events exposing (onInput)
+-- import Html.Events exposing (onInput)
 import Css exposing (..)
 
 
@@ -50,19 +50,20 @@ type InputTypes
 State for an input text box with placeholder and validation highlighting
 
 -}
-type alias CheckboxModel command =
+type alias Model command =
     { id : String
     , key : String
     , value : String
     , checked : Bool
-    , onClick : String -> String -> command
+    , error : Bool
+    , onClick : String -> command
     }
 
 
 {-| view
 
 -}
-view : InputModel command -> Html command
+view : Model command -> Html command
 view model =
   input
     [ Attr.id <| model.id
@@ -89,11 +90,9 @@ view model =
       else
         [
         ]
-    , Attr.placeholder model.placeholder
     , Attr.type_ "checkbox"
     , Attr.defaultValue model.value
     , Attr.value model.value
-    , onInput <| model.onInput model.id
     ]
     [
     ]
